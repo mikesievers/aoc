@@ -1,0 +1,11 @@
+# minimal conda environment
+name: learnsqlalchemy
+channels:
+  - defaults
+dependencies:
+  - python=3.12
+  - pip
+  - pip:
+    - sqlalchemy==2.0.*
+    - pytest
+    - alembic

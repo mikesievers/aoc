@@ -1,11 +1,13 @@
 # minimal conda environment
-name: learnsqlalchemy
+name: aoc
 channels:
-  - defaults
+  - conda-forge
+  - nodefaults
 dependencies:
-  - python=3.12
+  - python=3.13
   - pip
   - pip:
     - sqlalchemy==2.0.*
     - pytest
     - alembic
+    - numpy

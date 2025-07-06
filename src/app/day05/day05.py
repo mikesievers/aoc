@@ -39,3 +39,26 @@ def middle_page_sum(mask, pages):
     middle_pages = [page_seq[len(page_seq) // 2] for page_seq in pages]
     ok_middle_pages = [middle_pages[i] for (i, _) in enumerate(mask) if mask[i] is True]
     return sum(ok_middle_pages)
+
+
+def make_sequence_correct(rules, incorrect_seq: list[int]) -> list[int]:
+    seq = incorrect_seq.copy()
+    while not check_one_line(rules, seq):
+        seq = switch_first_offender(rules, seq)
+    return seq
+
+
+def switch_first_offender(rules, seq):
+    new_seq = seq.copy()
+    for first_page, second_page in rules:
+        try:
+            idx_first = seq.index(first_page)
+            idx_second = seq.index(second_page)
+            if idx_first > idx_second:
+                new_seq[idx_first] = seq[idx_second]
+                new_seq[idx_second] = seq[idx_first]
+                return new_seq
+        except ValueError:
+            pass  # At least one element of the rule was not in the pages - that's OK
+
+    return new_seq  # nothing needed changing if we get here

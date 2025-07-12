@@ -2,5 +2,5 @@
 pythonpath = ["src"]
 
 [tool.pyright]
-typeCheckingMode = "off"
+typeCheckingMode = "standard"
 extraPaths  = "src"

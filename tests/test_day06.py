@@ -32,9 +32,15 @@ def test_make_move(sample_board):
     sample_board.make_move()
     assert sample_board._player.get_pos() == (5, 4)
 
+    assert (6, 4, Orientation.UP) in sample_board._past_moves
+    assert (5, 4, Orientation.UP) in sample_board._past_moves
+
     sample_board._player._orientation = Orientation.RIGHT
     sample_board.make_move()
     assert sample_board._player.get_pos() == (5, 5)
+
+    assert (5, 4, Orientation.UP) in sample_board._past_moves
+    assert (5, 5, Orientation.RIGHT) in sample_board._past_moves
 
     sample_board._player._orientation = Orientation.DOWN
     sample_board.make_move()
@@ -79,3 +85,35 @@ def test_part_1(real_board):
         real_board.make_move()
 
     assert real_board.count_walked() == 5409
+
+
+def test_set_obstacle(sample_board):
+    sample_board.set_obstacle(-2, 1)
+    while not sample_board._is_over:
+        sample_board.make_move()
+    assert sample_board.is_loop
+
+
+@pytest.mark.parametrize(
+    "fname,expected_nr_possibilities", [("sample.txt", 6), ("input.txt", 2022)]
+)
+def test_possibilities(fname, expected_nr_possibilities):
+    nr_possibilities = 0
+    board = Board.from_file(fname)
+
+    (y_max, x_max) = board.shape()
+
+    # for y in [8]:  # range(y_max):
+    #    for x in [1]:  # range(x_max):
+    for y in range(y_max):
+        for x in range(x_max):
+            board = Board.from_file(fname)
+            if (y, x) != board._player.get_pos():
+                board.set_obstacle(y, x)
+            while not board._is_over:
+                board.make_move()
+            if board._is_loop:
+                nr_possibilities += 1
+                print(f"{(y, x) =}")
+
+    assert nr_possibilities == expected_nr_possibilities

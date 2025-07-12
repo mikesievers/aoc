@@ -66,17 +66,23 @@ class Board:
     _walked_cells: np.ndarray
     _player: Player
     _is_over: bool
+    _is_loop: bool
+    _past_moves: set
 
     @staticmethod
     def from_file(fname: str) -> Board:
         with open(BASEPATH + fname) as infile:
-            lines = [list(line.strip()) for line in infile.readlines()]
+            lines = [
+                list(line.strip()) for line in infile.readlines() if "." in list(line)
+            ]
 
         # Set up the cells
         board = Board()
         board._is_over = False
+        board._is_loop = False
         board._cells = np.array(lines)
         board._walked_cells = np.full(board._cells.shape, Fields.EMPTY)
+        board._past_moves = set()
 
         # find the player position and remember it,
         # Mark the player position on the board with a period
@@ -87,6 +93,7 @@ class Board:
                     board._player = Player((y, x), Orientation.UP)
                     board._cells[y, x] = Fields.EMPTY
                     board._walked_cells[y, x] = Fields.WALKED
+                    board._past_moves.add((y, x, Orientation.UP))
 
         return board
 
@@ -105,14 +112,39 @@ class Board:
         # Turn right until you see the light:
         while next_field == Fields.OBSTRUCTION:
             self._player.turn_right()
+            # Check if this was a new position and terminate if yes
+            if not self.is_new_position(
+                *self._player.get_pos(), self._player.get_orientation()
+            ):
+                self._is_loop = True
+                self._is_over = True
+                return
+
             next_field = self.look_ahead()
 
         # move player
         self._player.move()
+        # Record this as new past move
+        if not self.is_new_position(
+            *self._player.get_pos(), self._player.get_orientation()
+        ):
+            self._is_loop = True
+            self._is_over = True
+            return
 
         # mark field as walked
         (y_new, x_new) = self._player.get_pos()
         self._walked_cells[y_new, x_new] = Fields.WALKED
+
+    def is_new_position(self, y: int, x: int, orientation: Orientation) -> bool:
+        """Check if this position and orientation has been seen before.
+        Remember the position and orientation if not."""
+        new_pos_dir = (y, x, orientation)
+        if new_pos_dir in self._past_moves:
+            return False
+        # This position must be new, record it
+        self._past_moves.add((*self._player.get_pos(), self._player.get_orientation()))
+        return True
 
     def look_ahead(self) -> str:
         dir = self._player.get_orientation()
@@ -150,3 +182,7 @@ class Board:
                 if self._walked_cells[y, x] == Fields.WALKED:
                     nr_walked_fields += 1
         return nr_walked_fields
+
+    def set_obstacle(self, y, x) -> None:
+        if self._cells[y, x] == Fields.EMPTY:
+            self._cells[y, x] = Fields.OBSTRUCTION

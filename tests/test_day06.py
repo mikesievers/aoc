@@ -91,7 +91,7 @@ def test_set_obstacle(sample_board):
     sample_board.set_obstacle(-2, 1)
     while not sample_board._is_over:
         sample_board.make_move()
-    assert sample_board.is_loop
+    assert sample_board._is_loop
 
 
 @pytest.mark.parametrize(

@@ -37,3 +37,12 @@ def test_is_composable_concat(complex_operators):
     data = read_data("sample.txt")
     assert is_composable(156, data[156], complex_operators)
     assert is_composable(7290, data[7290], complex_operators)
+
+
+# Part 2
+@pytest.mark.parametrize(
+    "fname, expected_sum", [("sample.txt", 11387), ("input.txt", 106016735664498)]
+)
+def test_add_valid_test_values_complex(fname, expected_sum, complex_operators):
+    data = read_data(fname)
+    assert add_valid_test_values(data, complex_operators) == expected_sum

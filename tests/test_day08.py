@@ -1,3 +1,5 @@
+import pytest
+
 from app.day08.day08 import Map
 
 
@@ -11,5 +13,11 @@ def test_map_init():
 
 def test_find_antinodes():
     map = Map("sample.txt")
-    assert (2, 0) in map._antinodes
+    assert (4, 9) in map._antinodes
     assert (7, 7) in map._antinodes
+
+
+@pytest.mark.parametrize("fname,expected_nr", [("sample.txt", 14), ("input.txt", 344)])
+def test_nr_antinodes(fname, expected_nr):
+    map = Map(fname)
+    assert len(map._antinodes) == expected_nr

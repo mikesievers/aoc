@@ -1,8 +1,6 @@
 # About
 
-Advent of Code: https://adventofcode.com/2024
+This repository contains work on Advent of Code: https://adventofcode.com/2024
 
-
-NEXT:
-https://adventofcode.com/2024/day/1
+The software is created purely to improve language skills and may be *slightly* overengineered :)
 

@@ -80,3 +80,70 @@ def calculate_checksum(cd: np.ndarray) -> int:
             sum += int(block_id) * int(idx)
 
     return sum
+
+
+def defragment_disk(disk: np.ndarray) -> np.ndarray:
+    """
+    "Defragment" by moving files (highest ID first) to the leftmost possible space
+    """
+
+    idx_l = 0
+    idx_r = len(disk) - 1
+
+    df = disk.copy()
+
+    while True:
+        ## Determine extent of next file (highest index first)
+        # scan from the right to the first file
+        while df[idx_r] == -1 and idx_r > 0:
+            idx_r -= 1
+        idx_file_r = idx_r  # right most index of the file
+        file_id = df[idx_r]
+        while df[idx_r - 1] == file_id and idx_r > 0:
+            idx_r -= 1
+        idx_file_l = idx_r  # left most index of the file
+        len_file = idx_file_r - idx_file_l
+
+        ## Find the first contiguous free block of sufficient size
+        # starting from the left
+        idx_free_l = find_first_free_block(
+            df=df, idx_file_l=idx_file_l, len_file=len_file
+        )
+
+        if idx_free_l:  # place for file found, move to it
+            for offset in range(len_file + 1):
+                df[idx_free_l + offset] = df[idx_file_l + offset]
+                df[idx_file_l + offset] = -1
+
+        # After file index 0, leave the loop
+        # Yes, that means we also inspect moved files again,
+        # but don't expect them to move.
+        if file_id == 0:
+            break
+
+        # prepare for the next file
+        idx_r -= 1
+
+    return df
+
+
+def find_first_free_block(df: np.ndarray, idx_file_l: int, len_file: int) -> int | None:
+    idx_l = 0
+
+    idx_free_l_final = None
+
+    while idx_l <= idx_file_l:
+        if df[idx_l] > -1:
+            idx_l += 1
+            continue
+        idx_free_l = idx_l
+        while df[idx_l + 1] == -1:
+            idx_l += 1
+        idx_free_r = idx_l
+        if idx_free_r - idx_free_l >= len_file:
+            idx_free_l_final = idx_free_l
+            break
+        # no candidate found, continue 1 further to the right
+        idx_l += 1
+
+    return idx_free_l_final

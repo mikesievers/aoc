@@ -1,4 +1,11 @@
-from app.day09.day09 import compact_disk, parse_diskmap, read_diskmap
+import pytest
+
+from app.day09.day09 import (
+    calculate_checksum,
+    compact_disk,
+    parse_diskmap,
+    read_diskmap,
+)
 
 
 def test_read_diskmap():
@@ -29,4 +36,10 @@ def test_compact_disk():
     assert cd[4] == 8
 
 
-# NEXT: test checksum
+@pytest.mark.parametrize(
+    "fname,expected_sum", [("sample.txt", 1928), ("input.txt", 6415184586041)]
+)
+def test_calculate_checksum(fname, expected_sum):
+    disk = parse_diskmap(read_diskmap(fname))
+    cd = compact_disk(disk)
+    assert calculate_checksum(cd) == expected_sum

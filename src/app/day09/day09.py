@@ -70,3 +70,13 @@ def compact_disk(disk: np.ndarray) -> np.ndarray:
         cd[idx_r] = -1
 
     return cd
+
+
+def calculate_checksum(cd: np.ndarray) -> int:
+    sum = int(0)
+    for idx in range(cd.shape[0]):
+        block_id = cd[idx]
+        if block_id > 0:
+            sum += int(block_id) * int(idx)
+
+    return sum

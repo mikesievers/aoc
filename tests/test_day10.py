@@ -27,8 +27,17 @@ def test_follow_trail():
     assert len(map._trails[(0, 4)]) == 6
 
 
+# Part 1
 @pytest.mark.parametrize("fname,expected", [("sample.txt", 36), ("input.txt", 582)])
 def test_sum_score(fname, expected):
     map = Map(fname)
     map.follow_all_trails()
     assert map.sum_score() == expected
+
+
+# Part 2
+@pytest.mark.parametrize("fname,expected", [("sample.txt", 81), ("input.txt", 1302)])
+def test_trail_ratings(fname, expected):
+    map = Map(fname)
+    map.follow_all_trails()
+    assert map.sum_trail_ratings() == expected

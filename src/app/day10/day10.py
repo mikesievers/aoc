@@ -34,14 +34,18 @@ class Direction:
 class Map:
     _map: np.ndarray
     _trails: dict[tuple[int, int], set[tuple[int, int]]]
+    _traces: dict[tuple[int, int], set[str]]
 
     def __init__(self, fname):
         with open(f"src/app/day10/{fname}") as f:
             lines = [list(line.strip()) for line in f.readlines() if len(line) > 2]
         self._map = np.array(lines, dtype=np.int8)
         self._trails = dict()
+        self._traces = dict()
 
-    def follow_trail(self, y: int, x: int, orig_y: int = -1, orig_x: int = -1) -> None:
+    def follow_trail(
+        self, y: int, x: int, orig_y: int = -1, orig_x: int = -1, trace=""
+    ) -> None:
         """
         Follow the trail starting at y, x by finding all possible next
         directions and following them in turn.
@@ -51,11 +55,19 @@ class Map:
         if orig_y < 0:
             (orig_y, orig_x) = (y, x)
 
-        # Remember the trail end
+        # Add the current location to the trace
+        if trace != "":
+            trace += "-"
+        trace += f"{(y, x)}"
+
+        # Remember the trail end, if reached
         if self._map[y, x] == 9:
             if self._trails.get((orig_y, orig_x), None) is None:
                 self._trails[(orig_y, orig_x)] = set()
+            if self._traces.get((orig_y, orig_x), None) is None:
+                self._traces[(orig_y, orig_x)] = set()
             self._trails[(orig_y, orig_x)].add((y, x))
+            self._traces[(orig_y, orig_x)].add(trace)
             return
 
         position = np.array([y, x])
@@ -93,7 +105,7 @@ class Map:
 
         # Recurse
         for direction in possible_directions:
-            self.follow_trail(direction[0], direction[1], orig_y, orig_x)
+            self.follow_trail(direction[0], direction[1], orig_y, orig_x, trace=trace)
         return
 
     def get_map_value_if_valid(self, y: int, x: int) -> int:
@@ -118,3 +130,9 @@ class Map:
         for _, trail_ends in self._trails.items():
             score += len(trail_ends)
         return score
+
+    def sum_trail_ratings(self):
+        sum_ratings = 0
+        for _, traces in self._traces.items():
+            sum_ratings += len(traces)
+        return sum_ratings

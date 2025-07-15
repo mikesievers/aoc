@@ -105,3 +105,16 @@ class Map:
         if y >= 0 and y < y_max and x >= 0 and x < x_max:
             return self._map[y, x]
         return -1
+
+    def follow_all_trails(self):
+        (y_max, y_min) = self._map.shape
+        for y in range(y_max):
+            for x in range(y_min):
+                if self._map[y, x] == 0:
+                    self.follow_trail(y, x)
+
+    def sum_score(self):
+        score = 0
+        for _, trail_ends in self._trails.items():
+            score += len(trail_ends)
+        return score

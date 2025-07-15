@@ -1,3 +1,5 @@
+import pytest
+
 from app.day10.day10 import Map
 
 
@@ -23,3 +25,10 @@ def test_follow_trail():
 
     map.follow_trail(y=0, x=4)
     assert len(map._trails[(0, 4)]) == 6
+
+
+@pytest.mark.parametrize("fname,expected", [("sample.txt", 36), ("input.txt", 582)])
+def test_sum_score(fname, expected):
+    map = Map(fname)
+    map.follow_all_trails()
+    assert map.sum_score() == expected

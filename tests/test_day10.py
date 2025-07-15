@@ -9,7 +9,17 @@ def test_read_map():
     assert map._map[-5, -3] == 8
 
 
-# def test_find_viable_neighbors():
-#     map = read_map("sample.txt")
+def test_follow_trail():
+    map = Map("sample.txt")
 
-#     assert find_viable_neighbors()
+    map.follow_trail(y=1, x=1)
+
+    expected = set()
+    expected.add((0, 1))
+    assert map._trails[(1, 1)] == expected
+
+    map.follow_trail(y=0, x=1)
+    assert map._trails[(0, 1)] == expected
+
+    map.follow_trail(y=0, x=4)
+    assert len(map._trails[(0, 4)]) == 6

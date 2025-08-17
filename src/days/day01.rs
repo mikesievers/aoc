@@ -12,6 +12,11 @@
 //! a1b2c3d4e5f
 //! treb7uchet
 //!
+//! Final Result Part 1:
+//! ```
+//! use aoc::days::day01;
+//! assert_eq!(day01::sum_calibration_values("src/days/day01_input.txt"), 56465);
+//! ```
 //!
 //! The calibration values are: 12, 38, 15, 77. Adding them results in 142.
 //!

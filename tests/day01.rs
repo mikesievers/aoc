@@ -1,7 +1,22 @@
 use aoc::days::*;
+use rstest::rstest;
 
 #[test]
-fn test_day01_example() {
-    let res = day01::stub();
-    assert_eq!(res, 42);
+fn test_read_input() {
+    let lines = day01::read_input("src/days/day01_sample.txt");
+
+    assert!(lines.len() > 1);
+}
+
+#[rstest(
+    input,
+    expected,
+    case("1abc2", 12),
+    case("pqr3stu8vwx", 38),
+    case("a1b2c3d4e5f", 15),
+    case("treb7uchet", 77)
+)]
+#[test]
+fn test_extract_calibration_value(input: &str, expected: u32) {
+    assert_eq!(day01::extract_calibration_value(input), Some(expected));
 }

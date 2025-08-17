@@ -41,3 +41,11 @@ pub fn extract_calibration_value(input: &str) -> Option<u32> {
 
     Some(first_digit * 10 + last_digit)
 }
+
+pub fn sum_calibration_values(fname: &str) -> u32 {
+    let lines = read_input(fname);
+    lines
+        .iter()
+        .map(|line| extract_calibration_value(line).unwrap())
+        .sum()
+}

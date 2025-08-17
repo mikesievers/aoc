@@ -20,3 +20,14 @@ fn test_read_input() {
 fn test_extract_calibration_value(input: &str, expected: u32) {
     assert_eq!(day01::extract_calibration_value(input), Some(expected));
 }
+
+#[rstest(
+    fname,
+    expected,
+    case("src/days/day01_sample.txt", 142),
+    case("src/days/day01_input.txt", 56465)
+)]
+#[test]
+fn test_sum_calibration_values(fname: &str, expected: u32) {
+    assert_eq!(day01::sum_calibration_values(fname), expected);
+}

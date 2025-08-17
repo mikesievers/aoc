@@ -3,7 +3,7 @@ use rstest::rstest;
 
 #[test]
 fn test_read_input() {
-    let lines = day01::read_input("src/days/day01_sample.txt");
+    let lines = day01::read_input("resources/day01_sample.txt");
 
     assert!(lines.len() > 1);
 }
@@ -24,8 +24,8 @@ fn test_extract_calibration_value(input: &str, expected: u32) {
 #[rstest(
     fname,
     expected,
-    case("src/days/day01_sample.txt", 142),
-    case("src/days/day01_input.txt", 56465)
+    case("resources/day01_sample.txt", 142),
+    case("resources/day01_input.txt", 56465)
 )]
 #[test]
 fn test_sum_calibration_values(fname: &str, expected: u32) {

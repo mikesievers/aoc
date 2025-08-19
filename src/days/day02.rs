@@ -1,7 +1,9 @@
 use std::fs::*;
 use std::io::{BufRead, BufReader};
 
+#[allow(dead_code)]
 pub const INPUT: &str = "resources/day02_input.txt";
+#[allow(dead_code)]
 pub const SAMPLE: &str = "resources/day02_sample.txt";
 
 pub struct Set {

@@ -45,3 +45,33 @@ fn test_parse_line() {
 fn test_sum_possible_games() {
     assert_eq!(day02::sum_possible_games("resources/day02_sample.txt"), 8);
 }
+
+// Part 2
+#[test]
+fn test_power() {
+    let oneset = day02::Set {
+        red: 8,
+        green: 1,
+        blue: 4,
+    };
+
+    let anotherset = day02::Set {
+        red: 4,
+        green: 3,
+        blue: 7,
+    };
+
+    let onegame = day02::Game {
+        nr: 1,
+        sets: vec![oneset, anotherset],
+    };
+
+    // The power is the product of the minimal amounts of rgb balls needed
+    // to make the game possible
+    assert_eq!(onegame.power(), 8 * 3 * 7);
+}
+
+#[test]
+fn test_sum_power() {
+    assert_eq!(day02::sum_power("resources/day02_sample.txt"), 2286);
+}

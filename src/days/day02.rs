@@ -21,6 +21,14 @@ impl Set {
 }
 
 impl Game {
+    pub fn power(&self) -> usize {
+        let max_nr_red = self.sets.iter().map(|set| set.red).max().unwrap();
+        let max_nr_green = self.sets.iter().map(|set| set.green).max().unwrap();
+        let max_nr_blue = self.sets.iter().map(|set| set.blue).max().unwrap();
+
+        max_nr_red * max_nr_green * max_nr_blue
+    }
+
     pub fn is_game_possible(&self, red: usize, green: usize, blue: usize) -> bool {
         let is_possible = self
             .sets
@@ -32,6 +40,7 @@ impl Game {
             .all(|x| x);
         is_possible
     }
+
     pub fn from_line(line: &str) -> Self {
         // Split game lines such as
         // Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
@@ -121,4 +130,11 @@ pub fn sum_possible_games(fname: &str) -> usize {
         .sum();
 
     sum_possible_games
+}
+
+pub fn sum_power(fname: &str) -> usize {
+    let lines = read_input(fname);
+    let games: Vec<Game> = lines.iter().map(|line| Game::from_line(line)).collect();
+
+    games.iter().map(|game| game.power()).sum()
 }

@@ -19,4 +19,7 @@ fn main() {
     // Day 2
     let day02_p1 = day02::sum_possible_games("resources/day02_input.txt");
     println!("Day 02 part 01: {}", day02_p1);
+
+    let day02_p2 = day02::sum_power("resources/day02_input.txt");
+    println!("Day 02 part 01: {}", day02_p2);
 }

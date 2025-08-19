@@ -29,9 +29,7 @@ impl Game {
                 let set_possible = set.is_set_possible(red, green, blue);
                 set_possible
             })
-            .all(|x| {
-                x
-            });
+            .all(|x| x);
         is_possible
     }
     pub fn from_line(line: &str) -> Self {
@@ -104,4 +102,23 @@ pub fn read_input(fname: &str) -> Vec<String> {
         .collect();
 
     lines
+}
+
+pub fn sum_possible_games(fname: &str) -> usize {
+    let red = 12_usize;
+    let green = 13_usize;
+    let blue = 14_usize;
+
+    let lines = read_input(fname);
+    let games: Vec<Game> = lines.iter().map(|line| Game::from_line(line)).collect();
+
+    let sum_possible_games = games
+        .iter()
+        .map(|game| match game.is_game_possible(red, green, blue) {
+            true => game.nr,
+            false => 0,
+        })
+        .sum();
+
+    sum_possible_games
 }

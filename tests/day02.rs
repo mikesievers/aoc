@@ -7,7 +7,7 @@ fn test_read_input() {
 }
 
 #[test]
-fn test_set_and_game(){
+fn test_set_and_game() {
     let oneset = day02::Set {
         red: 3,
         green: 3,
@@ -23,7 +23,6 @@ fn test_set_and_game(){
     assert_eq!(onegame.is_game_possible(10, 10, 10), true);
 }
 
-
 #[test]
 fn test_parse_line() {
     let line = "Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue";
@@ -36,9 +35,13 @@ fn test_parse_line() {
     assert_eq!(game.sets[2].blue, 1);
     assert_eq!(game.sets[2].red, 0);
 
-
     assert_eq!(game.is_game_possible(10, 10, 10), true);
     assert_eq!(game.is_game_possible(0, 10, 10), false);
     assert_eq!(game.is_game_possible(10, 0, 10), false);
     assert_eq!(game.is_game_possible(10, 10, 0), false);
+}
+
+#[test]
+fn test_sum_possible_games() {
+    assert_eq!(day02::sum_possible_games("resources/day02_sample.txt"), 8);
 }

@@ -15,4 +15,8 @@ fn main() {
 
     let day01_p2 = day01::sum_subbed_calibration_values("resources/day01_input.txt");
     println!("Day 01 part 02: {}", day01_p2); // 55902 is wrong
+
+    // Day 2
+    let day02_p1 = day02::sum_possible_games("resources/day02_input.txt");
+    println!("Day 02 part 01: {}", day02_p1);
 }

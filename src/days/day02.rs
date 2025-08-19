@@ -14,7 +14,26 @@ pub struct Game {
     pub sets: Vec<Set>,
 }
 
+impl Set {
+    pub fn is_set_possible(&self, red: usize, green: usize, blue: usize) -> bool {
+        (self.red <= red) && (self.green <= green) && (self.blue <= blue)
+    }
+}
+
 impl Game {
+    pub fn is_game_possible(&self, red: usize, green: usize, blue: usize) -> bool {
+        let is_possible = self
+            .sets
+            .iter()
+            .map(|set| {
+                let set_possible = set.is_set_possible(red, green, blue);
+                set_possible
+            })
+            .all(|x| {
+                x
+            });
+        is_possible
+    }
     pub fn from_line(line: &str) -> Self {
         // Split game lines such as
         // Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green

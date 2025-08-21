@@ -22,4 +22,9 @@ fn main() {
 
     let day02_p2 = day02::sum_power("resources/day02_input.txt");
     println!("Day 02 part 01: {}", day02_p2);
+
+    // Day 3
+    let day03_p1 = day03::sum_of_parts("resources/day03_input.txt");
+    println!("Day 03 part 01: {}", day03_p1);
+    // 9633538 is too high!
 }

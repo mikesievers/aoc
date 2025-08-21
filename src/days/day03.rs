@@ -1,3 +1,9 @@
+//! Day 03:
+//! ```
+//! use aoc::days::day03;
+//! assert_eq!(day03::sum_of_parts("resources/day03_input.txt"), 553825)
+//! ```
+//!
 use std::fs::*;
 use std::io::{BufRead, BufReader};
 
@@ -23,6 +29,44 @@ pub struct Grid {
 }
 
 impl Grid {
+    pub fn valid_parts(&self) -> Vec<u32> {
+        // check if parts are valid and return a vector of them
+        let mut valid_parts: Vec<u32> = vec![];
+
+        let _: () = self
+            .numbers
+            .iter()
+            .map(|number| {
+                let mut is_valid = false;
+                let _: () = number
+                    .cells
+                    .iter()
+                    .map(|cell| {
+                        for dy in -1..=1 {
+                            for dx in -1..=1 {
+                                let y_check = cell.0 as i32 + dy;
+                                let x_check = cell.1 as i32 + dx;
+                                if (x_check >= 0)
+                                    && (y_check >= 0)
+                                    && self.symbols.iter().any(|symbol| {
+                                        symbol.cell == (y_check as usize, x_check as usize)
+                                    })
+                                {
+                                    is_valid = true;
+                                }
+                            }
+                        }
+                    })
+                    .collect();
+                if is_valid {
+                    valid_parts.push(number.value);
+                }
+            })
+            .collect();
+
+        valid_parts
+    }
+
     pub fn from_lines(lines: Vec<Vec<char>>) -> Self {
         let mut numbers: Vec<Number> = vec![];
         let mut symbols: Vec<Symbol> = vec![];
@@ -54,14 +98,8 @@ impl Grid {
                 } else {
                     // If the character is not a digit:
                     match c {
-                        // a '.' is a background character - check if the previous char was the end of a number
-                        '.' => {
-                            Grid::_check_and_track_number(
-                                &mut number_candidate,
-                                &mut numbers,
-                                &mut cells,
-                            );
-                        }
+                        // a '.' is a background character - nothing happens
+                        '.' => {}
                         // Anything else is a symbol worth recording
                         _ => {
                             symbols.push(Symbol {
@@ -71,6 +109,8 @@ impl Grid {
                             });
                         }
                     }
+                    // in any case, before the special character, there might have been a number
+                    Grid::_check_and_track_number(&mut number_candidate, &mut numbers, &mut cells);
                 }
             }
         }
@@ -112,4 +152,15 @@ pub fn read_input(fname: &str) -> Vec<Vec<char>> {
         .map(|line| line.unwrap().trim().chars().collect())
         .collect();
     grid
+}
+
+pub fn sum_of_parts(fname: &str) -> u32 {
+    let lines = read_input(fname);
+
+    let grid = Grid::from_lines(lines);
+
+    let valid_parts = grid.valid_parts();
+
+    let sum: u32 = valid_parts.iter().sum();
+    sum
 }

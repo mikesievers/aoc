@@ -20,5 +20,8 @@ pub fn test_parse_grid() {
     // * find numbers and record their cells
     // * find symbols and record their cells
 
-    assert!(false);
+    let grid = day03::Grid::from_lines(lines);
+
+    assert_eq!(grid.numbers[1].value, 114);
+    assert_eq!(grid.symbols[1].cell, (3, 6));
 }

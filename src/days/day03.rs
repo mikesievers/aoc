@@ -120,10 +120,7 @@ impl Grid {
         // check if last line has ended with a digit
         Grid::_check_and_track_number(&mut number_candidate, &mut numbers, &mut cells);
 
-        Grid {
-            numbers: numbers,
-            symbols: symbols,
-        }
+        Grid { numbers, symbols }
     }
 
     fn _check_and_track_number(
@@ -131,17 +128,14 @@ impl Grid {
         numbers: &mut Vec<Number>,
         cells: &mut Vec<(usize, usize)>,
     ) {
-        match number_candidate {
-            Some(nr) => {
-                numbers.push(Number {
-                    id: numbers.len(),
-                    value: *nr,
-                    cells: cells.clone(),
-                });
-                *number_candidate = None;
-                *cells = vec![];
-            }
-            None => {}
+        if let Some(nr) = number_candidate {
+            numbers.push(Number {
+                id: numbers.len(),
+                value: *nr,
+                cells: cells.clone(),
+            });
+            *number_candidate = None;
+            *cells = vec![];
         }
     }
 }
@@ -150,11 +144,10 @@ pub fn read_input(fname: &str) -> Vec<Vec<char>> {
     let file = File::open(fname).unwrap();
     let reader = BufReader::new(file);
 
-    let grid = reader
+    reader
         .lines()
         .map(|line| line.unwrap().trim().chars().collect())
-        .collect();
-    grid
+        .collect()
 }
 
 pub fn sum_of_parts(fname: &str) -> u32 {

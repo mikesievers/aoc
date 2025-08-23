@@ -13,7 +13,6 @@ use std::io::{BufRead, BufReader};
 // A number represents a number found on the grid
 // and it knows the cells it comes from (y(down), x(right))
 pub struct Number {
-    pub id: usize,
     pub value: u32,
     pub cells: Vec<(usize, usize)>,
 }
@@ -21,7 +20,6 @@ pub struct Number {
 // A symbol is any char of the grid that is not
 // an numeric digit or period '.'
 pub struct Symbol {
-    pub id: usize,
     pub character: char,
     pub cell: (usize, usize),
 }
@@ -40,34 +38,62 @@ impl Grid {
             .numbers
             .iter()
             .map(|number| {
-                let mut is_valid = false;
-                let _: () = number
-                    .cells
-                    .iter()
-                    .map(|cell| {
-                        for dy in -1..=1 {
-                            for dx in -1..=1 {
-                                let y_check = cell.0 as i32 + dy;
-                                let x_check = cell.1 as i32 + dx;
-                                if (x_check >= 0)
-                                    && (y_check >= 0)
-                                    && self.symbols.iter().any(|symbol| {
-                                        symbol.cell == (y_check as usize, x_check as usize)
-                                    })
-                                {
-                                    is_valid = true;
-                                }
-                            }
-                        }
-                    })
-                    .collect();
-                if is_valid {
+                if self.is_valid_number(number) {
                     valid_parts.push(number.value);
                 }
             })
             .collect();
 
         valid_parts
+    }
+
+    fn is_valid_number(&self, number: &Number) -> bool {
+        let mut is_valid = false;
+        let _: () = number
+            .cells
+            .iter()
+            .map(|cell| {
+                for dy in -1..=1 {
+                    for dx in -1..=1 {
+                        let y_check = cell.0 as i32 + dy;
+                        let x_check = cell.1 as i32 + dx;
+                        if (x_check >= 0)
+                            && (y_check >= 0)
+                            && self
+                                .symbols
+                                .iter()
+                                .any(|symbol| symbol.cell == (y_check as usize, x_check as usize))
+                        {
+                            is_valid = true;
+                        }
+                    }
+                }
+            })
+            .collect();
+        is_valid
+    }
+
+    fn is_number_neighbor_of(&self, number: &Number, symbol_cell: (usize, usize)) -> bool {
+        let mut is_valid = false;
+        let _: () = number
+            .cells
+            .iter()
+            .map(|cell| {
+                for dy in -1..=1 {
+                    for dx in -1..=1 {
+                        let y_check = cell.0 as i32 + dy;
+                        let x_check = cell.1 as i32 + dx;
+                        if (x_check >= 0)
+                            && (y_check >= 0)
+                            && symbol_cell == (y_check as usize, x_check as usize)
+                        {
+                            is_valid = true;
+                        }
+                    }
+                }
+            })
+            .collect();
+        is_valid
     }
 
     pub fn from_lines(lines: Vec<Vec<char>>) -> Self {
@@ -106,7 +132,6 @@ impl Grid {
                         // Anything else is a symbol worth recording
                         _ => {
                             symbols.push(Symbol {
-                                id: symbols.len(),
                                 character: c,
                                 cell: (y, x),
                             });
@@ -130,7 +155,6 @@ impl Grid {
     ) {
         if let Some(nr) = number_candidate {
             numbers.push(Number {
-                id: numbers.len(),
                 value: *nr,
                 cells: cells.clone(),
             });
@@ -138,8 +162,52 @@ impl Grid {
             *cells = vec![];
         }
     }
+
+    fn find_gears(&self) -> Vec<(usize, usize)> {
+        self.symbols
+            .iter()
+            .filter(|c| c.character == '*')
+            .map(|s| s.cell)
+            .collect()
+    }
+
+    fn gear_products(&self) -> Vec<u32> {
+        self.find_gears()
+            .iter()
+            .map(|gear_cell| {
+                let mut neighbors: Vec<u32> = vec![];
+                let _: Vec<_> = self
+                    .numbers
+                    .iter()
+                    .map(|number| {
+                        if self.is_number_neighbor_of(number, *gear_cell) {
+                            neighbors.push(number.value);
+                        }
+                    })
+                    .collect();
+                match neighbors.len() {
+                    2 => neighbors[0] * neighbors[1],
+                    _ => 0,
+                }
+            })
+            .collect()
+    }
 }
 
+// Part 2
+#[test]
+fn test_find_gears() {
+    let lines = read_input("resources/day03_sample.txt");
+    let grid = Grid::from_lines(lines);
+
+    let gears = grid.find_gears();
+    assert_eq!(gears.len(), 3);
+
+    let gear_products = grid.gear_products();
+    assert_eq!(gear_products.into_iter().sum::<u32>(), 467835);
+}
+
+// Part 1 + general
 pub fn read_input(fname: &str) -> Vec<Vec<char>> {
     let file = File::open(fname).unwrap();
     let reader = BufReader::new(file);

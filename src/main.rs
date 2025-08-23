@@ -27,4 +27,6 @@ fn main() {
     let day03_p1 = day03::sum_of_parts("resources/day03_input.txt");
     println!("Day 03 part 01: {}", day03_p1);
     // 9633538 is too high!
+    let day03_p2 = day03::sum_gear_products("resources/day03_input.txt");
+    println!("Day 03 part 02: {}", day03_p2);
 }

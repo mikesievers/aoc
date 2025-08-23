@@ -4,6 +4,9 @@
 //! assert_eq!(day03::sum_of_parts("resources/day03_input.txt"), 553825)
 //! ```
 //!
+//! Part 2 only considers the stars to be valid gears.
+//! The number sought is the sum of the products of the numbers connected by a gears
+//!
 use std::fs::*;
 use std::io::{BufRead, BufReader};
 

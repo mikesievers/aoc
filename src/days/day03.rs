@@ -200,8 +200,6 @@ pub fn sum_gear_products(fname: &str) -> u32 {
     let lines = read_input(fname);
     let grid = Grid::from_lines(lines);
 
-    let gears = grid.find_gears();
-
     let gear_products = grid.gear_products();
     gear_products.into_iter().sum::<u32>()
 }

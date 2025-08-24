@@ -35,7 +35,9 @@ impl Stack {
         // Card 1: 41 48 83 86 17 | 83 86  6 31 17  9 48 53
         let cardnr_and_date = line.splitn(2, ':').collect::<Vec<&str>>();
 
-        let number = cardnr_and_date[0].split_whitespace().collect::<Vec<&str>>()[1].parse().unwrap();
+        let number = cardnr_and_date[0].split_whitespace().collect::<Vec<&str>>()[1]
+            .parse()
+            .unwrap();
 
         //  41 48 83 86 17 | 83 86  6 31 17  9 48 53
         let winners_and_numbers = cardnr_and_date[1].splitn(2, '|').collect::<Vec<&str>>();
@@ -64,16 +66,15 @@ impl Stack {
     }
 
     fn count_matches(card: &Card) -> u32 {
-        card
-            .winners
+        card.winners
             .iter()
             .map(|winner| match card.numbers.contains(winner) {
                 true => 1,
                 false => 0,
             })
             .sum()
-        }
-        
+    }
+
     pub fn sum_scores(&self) -> i32 {
         self.cards
             .iter()
@@ -81,6 +82,15 @@ impl Stack {
             .collect::<Vec<i32>>()
             .iter()
             .sum()
+    }
+
+    // Part 2
+    pub fn sum_all_cards(&self) -> usize {
+        // Accumulate all cards' indices
+        // Start with the original ones
+        let mut card_indices: Vec<usize> = (0..self.cards.len()).collect();
+
+        card_indices.len()
     }
 }
 
@@ -98,11 +108,11 @@ fn test_stack() {
 // Part 2
 // There's no such thing as "points". Instead, scratchcards only cause you to win more scratchcards equal to the number of winning numbers you have.
 
-// Specifically, you win copies of the scratchcards below the winning card equal to the number of matches. So, if card 10 were to have 5 matching 
+// Specifically, you win copies of the scratchcards below the winning card equal to the number of matches. So, if card 10 were to have 5 matching
 // numbers, you would win one copy each of cards 11, 12, 13, 14, and 15.
 
-// Copies of scratchcards are scored like normal scratchcards and have the same card number as the card they copied. So, if you win a copy of card 10 
-// and it has 5 matching numbers, it would then win a copy of the same cards that the original card 10 won: cards 11, 12, 13, 14, and 15. This process 
+// Copies of scratchcards are scored like normal scratchcards and have the same card number as the card they copied. So, if you win a copy of card 10
+// and it has 5 matching numbers, it would then win a copy of the same cards that the original card 10 won: cards 11, 12, 13, 14, and 15. This process
 // repeats until none of the copies cause you to win any more cards. (Cards will never make you copy a card past the end of the table.)
 
 // This time, the above example goes differently:
@@ -122,6 +132,12 @@ fn test_stack() {
 //     Your fourteen instances of card 5 (one original and thirteen copies) have no matching numbers and win no more cards.
 //     Your one instance of card 6 (one original) has no matching numbers and wins no more cards.
 
-// Once all of the originals and copies have been processed, you end up with 1 instance of card 1, 2 instances of card 2, 4 instances of card 3, 
+// Once all of the originals and copies have been processed, you end up with 1 instance of card 1, 2 instances of card 2, 4 instances of card 3,
 // 8 instances of card 4, 14 instances of card 5, and 1 instance of card 6. In total, this example pile of scratchcards causes you to ultimately have 30 scratchcards!
 
+#[test]
+fn test_sum_all_cards() {
+    let stack = Stack::from("resources/day04_sample_p2.txt");
+
+    assert_eq!(stack.sum_all_cards(), 30);
+}

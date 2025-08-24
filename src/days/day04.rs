@@ -69,6 +69,6 @@ fn test_stack() {
     assert_eq!(stack.cards[0].winners[2], 83);
     assert_eq!(stack.cards[0].numbers[2], 6);
     assert_eq!(Stack::score(&stack.cards[0]), 8);
-    assert_eq!(stack.sum_scores(), 3);
+    assert_eq!(stack.sum_scores(), 13);
 
 }

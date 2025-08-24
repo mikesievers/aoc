@@ -29,4 +29,9 @@ fn main() {
     // 9633538 is too high!
     let day03_p2 = day03::sum_gear_products("resources/day03_input.txt");
     println!("Day 03 part 02: {}", day03_p2);
+
+    // Day4
+    let day04_p1_stack = day04::Stack::from("resources/day04_input.txt");
+    println!("Day 04 part 01: {}", day04_p1_stack.sum_scores());
+
 }

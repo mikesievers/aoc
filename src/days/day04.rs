@@ -6,6 +6,7 @@ pub struct Stack {
 }
 
 struct Card {
+    number: i32,
     winners: Vec<i32>,
     numbers: Vec<i32>,
 }
@@ -31,9 +32,14 @@ impl Stack {
     }
 
     fn parse_line(line: String) -> Card {
-        let winners_and_numbers = line.splitn(2, ':').collect::<Vec<&str>>()[1]
-            .splitn(2, '|')
-            .collect::<Vec<&str>>();
+        // Card 1: 41 48 83 86 17 | 83 86  6 31 17  9 48 53
+        let cardnr_and_date = line.splitn(2, ':').collect::<Vec<&str>>();
+
+        let number = cardnr_and_date[0].split_whitespace().collect::<Vec<&str>>()[1].parse().unwrap();
+
+        //  41 48 83 86 17 | 83 86  6 31 17  9 48 53
+        let winners_and_numbers = cardnr_and_date[1].splitn(2, '|').collect::<Vec<&str>>();
+
         let winners = winners_and_numbers[0]
             .split_ascii_whitespace()
             .map(|nr| nr.parse().unwrap())
@@ -42,7 +48,11 @@ impl Stack {
             .split_ascii_whitespace()
             .map(|nr| nr.parse().unwrap())
             .collect();
-        Card { winners, numbers }
+        Card {
+            number,
+            winners,
+            numbers,
+        }
     }
 
     fn score(card: &Card) -> i32 {
@@ -74,6 +84,7 @@ impl Stack {
 fn test_stack() {
     let stack = Stack::from("resources/day04_sample.txt");
 
+    assert_eq!(stack.cards[0].number, 1);
     assert_eq!(stack.cards[0].winners[2], 83);
     assert_eq!(stack.cards[0].numbers[2], 6);
     assert_eq!(Stack::score(&stack.cards[0]), 8);

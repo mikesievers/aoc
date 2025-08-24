@@ -88,9 +88,44 @@ impl Stack {
     pub fn sum_all_cards(&self) -> usize {
         // Accumulate all cards' indices
         // Start with the original ones
-        let mut card_indices: Vec<usize> = (0..self.cards.len()).collect();
+        let card_indices: Vec<usize> = (0..self.cards.len()).collect();
 
-        card_indices.len()
+        // Determine which card copies have been won and add them to the indices
+
+        let won_cards = self.get_won_copies(&card_indices);
+
+        // count the number of original cards and the sum of all cards won
+        card_indices.len() + won_cards.len()
+    }
+
+    fn get_won_copies(&self, card_indices: &Vec<usize>) -> Vec<usize> {
+        // for all cards in the Vec
+        //    get won copies for this card
+        //    return the card
+        //    add them to the Vec
+        card_indices
+            .iter()
+            .map(|card_idx| {
+                let nr_matches = Stack::count_matches(&self.cards[*card_idx]) as usize;
+                match nr_matches {
+                    0 => vec![],
+                    n => {
+                        // ensure there is room for at least one card when matches are found
+                        if card_idx + n < self.cards.len() - 1 {
+                            let upper_idx = (card_idx + n).min(self.cards.len() - 1);
+                            let mut won_cards: Vec<usize> = ((card_idx + 1)..=upper_idx).collect();
+                            // println!("Card {card_idx} won cards: {:?}", won_cards);
+                            won_cards.extend(self.get_won_copies(&won_cards));
+                            won_cards
+                        } else {
+                            vec![]
+                        }
+                    }
+                }
+            })
+            .into_iter()
+            .flatten()
+            .collect::<Vec<usize>>()
     }
 }
 

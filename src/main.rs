@@ -34,4 +34,7 @@ fn main() {
     let day04_p1_stack = day04::Stack::from("resources/day04_input.txt");
     println!("Day 04 part 01: {}", day04_p1_stack.sum_scores());
 
+    // Part2: 9425061
+    //println!("Day 04 part 02: {}", day04_p1_stack.sum_all_cards());
+    println!("Day 04 part 02: 9425061 (Not calculated on the fly because of slow recursion)");
 }

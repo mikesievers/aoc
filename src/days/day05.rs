@@ -5,17 +5,13 @@
 //     bytes::complete::tag, character::complete::{digit1, multispace0, newline, space1, u32}, combinator::map_res, multi::{many1, separated_list1}, sequence::{preceded, terminated}, IResult
 // };
 use nom::{
-    IResult, Parser,
-    bytes::complete::tag,
-    character::complete::{digit1, line_ending, space0, space1},
-    combinator::map_res,
-    multi::separated_list1,
+    bytes::complete::tag, character::complete::{digit1, line_ending, space0, space1}, combinator::map_res, multi::separated_list1, sequence::terminated, IResult, Parser
 };
 use std::fs;
 #[derive(Debug, PartialEq, Eq)]
 pub struct Almanac {
     pub seeds: Vec<u32>,
-    // pub seed_to_soil: Vec<Vec<u32>>,
+    //    pub seed_to_soil: Vec<Vec<u32>>,
 }
 
 impl Almanac {
@@ -44,11 +40,32 @@ impl Almanac {
 
 fn parse_seeds(input: &str) -> IResult<&str, Vec<u32>> {
     let (input, _) = tag("seeds: ")(input)?;
-    let (input, seeds_str) = separated_list1(space0, digit1).parse(input)?;
+    let (input, seeds) =
+        separated_list1(space0, map_res(digit1, |s: &str| s.parse::<u32>())).parse(input)?;
+
     let (input, _) = line_ending(input)?;
-    let seeds = seeds_str.iter().map(|seed| seed.parse().unwrap()).collect();
     Ok((input, seeds))
 }
+
+fn parse_numbers(input: &str) -> IResult<&str, Vec<u32>> {
+    // `separated_list1` parses one or more items separated by a delimiter.
+    // Here, the items are `parse_u32` and the separator is `space1`.
+    separated_list1(space1, parse_u32)(input)
+}
+
+/// Parses a single u32 number.
+fn parse_u32(input: &str) -> IResult<&str, u32> {
+    // `map_res` takes the result of a parser and tries to convert it.
+    // `digit1` parses one or more digits, then we try to parse it as `u32`.
+    map_res(digit1, |s: &str| s.parse::<u32>())(input)
+}
+
+/// Parses a single u32 number.
+// fn parse_u32(input: &str) -> impl Parser<&str> {
+//     // `map_res` takes the result of a parser and tries to convert it.
+//     // `digit1` parses one or more digits, then we try to parse it as `u32`.
+//     map_res(digit1, |s: &str| s.parse::<u32>())
+// }
 
 #[test]
 fn test_parse_input() {

@@ -18,6 +18,8 @@ use std::fs::{self, read_to_string};
 #[derive(Debug, PartialEq, Eq)]
 pub struct Almanac {
     pub seeds: Vec<i32>,
+    // Maps are
+    // destination range start, source range start, range length
     pub seed_to_soil: Vec<Vec<i32>>,
     pub soil_to_fertilizer: Vec<Vec<i32>>,
     pub fertilizer_to_water: Vec<Vec<i32>>,
@@ -67,6 +69,34 @@ impl Almanac {
             humidity_to_location,
         }
     }
+
+    pub fn perform_map(&self, map: &Vec<Vec<i32>>, input: i32) -> i32 {
+        for line in map {
+            let (dst_base, src_base, len) = (line[0], line[1], line[2]);
+            if (src_base..src_base+len).contains(&input) {
+                return dst_base + ( input - src_base);
+            }
+
+        }
+        // If no mapping was possible, return the input
+        input
+    }
+
+    pub fn map_vector(&self, map: &Vec<Vec<i32>>, input: &Vec<i32>) -> Vec<i32> {
+        input.iter()
+        .map( |val|
+            self.perform_map(&map, *val)
+        ).collect()
+
+
+    }
+}
+
+#[test]
+fn test_perform_map() {
+    let almanac = Almanac::from_file("resources/day05_sample.txt");
+    assert_eq!(almanac.perform_map(&almanac.seed_to_soil, 79), 81);
+    assert_eq!(almanac.map_vector(&almanac.seed_to_soil, &almanac.seeds), [81,14,57,13]);
 }
 
 // Parser

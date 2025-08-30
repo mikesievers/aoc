@@ -5,7 +5,7 @@
 use nom::{
     IResult, Parser,
     bytes::complete::tag,
-    character::complete::{char, one_of},
+    character::complete::{char, one_of, line_ending},
     combinator::{map, recognize},
     multi::{many0, many1, separated_list1},
     sequence::terminated,
@@ -73,8 +73,8 @@ fn decimal_nr(input: &str) -> IResult<&str, i32> {
     .parse(input)
 }
 
-fn int_line(input: &str) -> IResult<&str, Vec<i32>> {
-    separated_list1(tag(" "), decimal_nr).parse(input)
+fn decimal_line(input: &str) -> IResult<&str, Vec<i32>> {
+    terminated(separated_list1(tag(" "), decimal_nr), line_ending).parse(input)
 }
 
 #[test]
@@ -86,10 +86,9 @@ fn test_parsing() {
 
     assert_eq!(res.1, 10000);
 
-    let mystr = "1 2 3";
-    let res = int_line.parse(mystr).unwrap();
+    let mystr = "1 2 3\r\n";
+    let res = decimal_line.parse(mystr).unwrap();
 
-    let expected: Vec<i32> = vec![1, 2, 3];
-    assert_eq!(res.1, expected);
     assert_eq!(res.1, vec![1, 2, 3]);
+    assert_eq!(res.0, "");
 }

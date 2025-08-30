@@ -81,6 +81,13 @@ fn seed_section(input: &str) -> IResult<&str, Vec<i32>> {
     preceded(tag("seeds: "), decimal_line).parse(input)
 }
 
+// TODO: expand this copy of seed_section to the text section
+// then generalize it to a named section via a higher order function
+// that returns a parser for that specific section
+fn parse_section(input: &str) -> IResult<&str, Vec<i32>> {
+    preceded(tag("seeds: "), decimal_line).parse(input)
+}
+
 #[test]
 fn test_parsing() {
     let mystr = "10000";

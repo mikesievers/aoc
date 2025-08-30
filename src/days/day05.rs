@@ -70,25 +70,15 @@ impl Almanac {
 }
 
 // Parser
-
 // Parse a file like:
-
 //
-
 // seeds: 79 14 55 13
-
 // seed-to-soil map:
-
 // 50 98 2
-
 // 52 50 48
-
 // soil-to-fertilizer map:
-
 // 0 15 37
-
 // 37 52 2
-
 // 39 0 15
 
 #[test]
@@ -97,9 +87,7 @@ fn test_parse_input() {
     let almanac = Almanac::from_file("resources/day05_sample.txt");
 
     assert_eq!(almanac.seeds, [79, 14, 55, 13]);
-
     assert_eq!(almanac.seed_to_soil, [[50, 98, 2], [52, 50, 48]]);
-
     assert_eq!(
         almanac.soil_to_fertilizer,
         [[0, 15, 37], [37, 52, 2], [39, 0, 15]]
@@ -118,11 +106,8 @@ fn seed_section(input: &str) -> IResult<&str, Vec<i32>> {
 }
 
 // Parse one section like
-
 // seed-to-soil map:
-
 // 50 98 2
-
 // 52 50 48
 
 fn parse_named_section(section_name: &str) -> impl Fn(&str) -> IResult<&str, Vec<Vec<i32>>> {
@@ -137,32 +122,18 @@ fn parse_named_section(section_name: &str) -> impl Fn(&str) -> IResult<&str, Vec
 
 fn test_parsing() {
     let mystr = "10000";
-
-    //let res = mystr.parse::<i32>().unwrap();
-
-    //let res = decimal_nr.parse(mystr).unwrap();
-
-    //let res: i32 = nom::character::complete::i32::<&str, nom::error::Error<&str>>(mystr).unwrap().1;
-
     let res: i32 = i32::<&str, Error<&str>>(mystr).unwrap().1;
-
     assert_eq!(res, 10000);
 
     let mystr = "1 2 3\r\n";
-
     let res = decimal_line.parse(mystr).unwrap();
-
     assert_eq!(res.1, vec![1, 2, 3]);
-
     assert_eq!(res.0, "");
 
     let input = read_to_string("resources/day05_sample.txt").unwrap();
-
     let seeds_res = seed_section.parse(input.as_str()).unwrap();
-
     assert_eq!(seeds_res.1, vec![79, 14, 55, 13]);
 
     let seed_to_soil_res = parse_named_section("seed-to-soil")(seeds_res.0).unwrap();
-
     assert_eq!(seed_to_soil_res.1, vec![vec![50, 98, 2], vec![52, 50, 48]]);
 }

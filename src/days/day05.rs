@@ -1,26 +1,37 @@
 // The data to parse for day 05 will be used
 // to explore the nom crate for data parsing.
+// See https://docs.rs/nom/8.0.0/nom/index.html
 
-// use nom::{
-//     bytes::complete::tag, character::complete::{digit1, multispace0, newline, space1, u32}, combinator::map_res, multi::{many1, separated_list1}, sequence::{preceded, terminated}, IResult
-// };
 use nom::{
-    bytes::complete::tag, character::complete::{digit1, line_ending, space0, space1}, combinator::map_res, multi::separated_list1, sequence::terminated, IResult, Parser
+    IResult, Parser,
+    bytes::complete::tag,
+    character::complete::{char, one_of},
+    combinator::{map, recognize},
+    multi::{many0, many1, separated_list1},
+    sequence::terminated,
 };
+
 use std::fs;
 #[derive(Debug, PartialEq, Eq)]
 pub struct Almanac {
-    pub seeds: Vec<u32>,
-    //    pub seed_to_soil: Vec<Vec<u32>>,
+    pub seeds: Vec<i32>,
+    pub seed_to_soil: Vec<Vec<i32>>,
 }
 
 impl Almanac {
     fn from_file(fname: &str) -> Self {
         let input = fs::read_to_string(fname).expect("Could not read input file.");
+        let input = String::from("seeds: 3 4 5");
 
-        let (input, seeds) = parse_seeds(input.as_str()).unwrap();
+        // Parser for a single integer
 
-        Self { seeds }
+        let seeds = vec![];
+        let seed_to_soil = vec![];
+
+        Self {
+            seeds,
+            seed_to_soil,
+        }
     }
 }
 
@@ -38,38 +49,47 @@ impl Almanac {
 // 37 52 2
 // 39 0 15
 
-fn parse_seeds(input: &str) -> IResult<&str, Vec<u32>> {
-    let (input, _) = tag("seeds: ")(input)?;
-    let (input, seeds) =
-        separated_list1(space0, map_res(digit1, |s: &str| s.parse::<u32>())).parse(input)?;
-
-    let (input, _) = line_ending(input)?;
-    Ok((input, seeds))
-}
-
-fn parse_numbers(input: &str) -> IResult<&str, Vec<u32>> {
-    // `separated_list1` parses one or more items separated by a delimiter.
-    // Here, the items are `parse_u32` and the separator is `space1`.
-    separated_list1(space1, parse_u32)(input)
-}
-
-/// Parses a single u32 number.
-fn parse_u32(input: &str) -> IResult<&str, u32> {
-    // `map_res` takes the result of a parser and tries to convert it.
-    // `digit1` parses one or more digits, then we try to parse it as `u32`.
-    map_res(digit1, |s: &str| s.parse::<u32>())(input)
-}
-
-/// Parses a single u32 number.
-// fn parse_u32(input: &str) -> impl Parser<&str> {
-//     // `map_res` takes the result of a parser and tries to convert it.
-//     // `digit1` parses one or more digits, then we try to parse it as `u32`.
-//     map_res(digit1, |s: &str| s.parse::<u32>())
-// }
-
 #[test]
 fn test_parse_input() {
     let almanac = Almanac::from_file("resources/day05_sample.txt");
 
     assert_eq!(almanac.seeds, [79, 14, 55, 13]);
+}
+
+// nom experimentation area
+
+fn decimal(input: &str) -> IResult<&str, String> {
+    map(
+        recognize(many1(terminated(one_of("0123456789"), many0(char('_'))))),
+        |s: &str| s.replace('_', ""),
+    )
+    .parse(input)
+}
+
+fn decimal_nr(input: &str) -> IResult<&str, i32> {
+    map(recognize(many1(one_of("0123456789"))), |s: &str| {
+        s.parse().expect("Could not parse into integer")
+    })
+    .parse(input)
+}
+
+fn int_line(input: &str) -> IResult<&str, Vec<i32>> {
+    separated_list1(tag(" "), decimal_nr).parse(input)
+}
+
+#[test]
+fn test_parsing() {
+    let mystr = "10000";
+    //let res = mystr.parse::<i32>().unwrap();
+
+    let res = decimal_nr.parse(mystr).unwrap();
+
+    assert_eq!(res.1, 10000);
+
+    let mystr = "1 2 3";
+    let res = int_line.parse(mystr).unwrap();
+
+    let expected: Vec<i32> = vec![1, 2, 3];
+    assert_eq!(res.1, expected);
+    assert_eq!(res.1, vec![1, 2, 3]);
 }

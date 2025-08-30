@@ -3,7 +3,13 @@
 // See https://docs.rs/nom/8.0.0/nom/index.html
 
 use nom::{
-    bytes::complete::tag, character::complete::{char, i32, line_ending, newline, one_of}, combinator::{map, recognize}, error::Error, multi::{many0, many1, separated_list1}, sequence::{delimited, preceded, terminated}, IResult, Parser
+    IResult, Parser,
+    bytes::complete::tag,
+    character::complete::{char, i32, line_ending, newline, one_of},
+    combinator::{map, recognize},
+    error::Error,
+    multi::{many0, many1, separated_list1},
+    sequence::{delimited, preceded, terminated},
 };
 
 use std::fs::{self, read_to_string};
@@ -52,15 +58,6 @@ fn test_parse_input() {
 }
 
 // nom experimentation area
-
-fn decimal(input: &str) -> IResult<&str, String> {
-    map(
-        recognize(many1(terminated(one_of("0123456789"), many0(char('_'))))),
-        |s: &str| s.replace('_', ""),
-    )
-    .parse(input)
-}
-
 fn decimal_line(input: &str) -> IResult<&str, Vec<i32>> {
     terminated(separated_list1(tag(" "), i32), line_ending).parse(input)
 }
@@ -72,9 +69,11 @@ fn seed_section(input: &str) -> IResult<&str, Vec<i32>> {
 // TODO: expand this copy of seed_section to the text section
 // then generalize it to a named section via a higher order function
 // that returns a parser for that specific section
-fn parse_section(input: &str) -> IResult<&str, Vec<i32>> {
-    preceded(tag("seeds: "), decimal_line).parse(input)
+fn parse_section(input: &str) -> IResult<&str, Vec<Vec<i32>>> {
+    preceded((tag("\r\nseed-to-soil map:"),line_ending), many1(decimal_line)).parse(input)
 }
+
+
 
 #[test]
 fn test_parsing() {
@@ -96,5 +95,8 @@ fn test_parsing() {
     let input = read_to_string("resources/day05_sample.txt").unwrap();
     let seeds_res = seed_section.parse(input.as_str()).unwrap();
 
-    assert_eq!(seeds_res.1, vec![79, 14, 55, 13])
+    assert_eq!(seeds_res.1, vec![79, 14, 55, 13]);
+
+    let seed_to_soil_res = parse_section(seeds_res.0).unwrap();
+    assert_eq!(seed_to_soil_res.1, vec![vec![50,98, 2], vec![52,50,48]]);
 }

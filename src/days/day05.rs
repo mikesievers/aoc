@@ -73,22 +73,29 @@ impl Almanac {
     pub fn perform_map(&self, map: &Vec<Vec<i32>>, input: i32) -> i32 {
         for line in map {
             let (dst_base, src_base, len) = (line[0], line[1], line[2]);
-            if (src_base..src_base+len).contains(&input) {
-                return dst_base + ( input - src_base);
+            if (src_base..src_base + len).contains(&input) {
+                return dst_base + (input - src_base);
             }
-
         }
         // If no mapping was possible, return the input
         input
     }
 
     pub fn map_vector(&self, map: &Vec<Vec<i32>>, input: &Vec<i32>) -> Vec<i32> {
-        input.iter()
-        .map( |val|
-            self.perform_map(&map, *val)
-        ).collect()
+        input
+            .iter()
+            .map(|val| self.perform_map(&map, *val))
+            .collect()
+    }
 
-
+    pub fn seed_to_location(&self) -> Vec<i32> {
+        let soils = self.map_vector(&self.seed_to_soil, &self.seeds);
+        let fertilizers = self.map_vector(&self.soil_to_fertilizer, &soils);
+        let waters = self.map_vector(&self.fertilizer_to_water, &fertilizers);
+        let lights = self.map_vector(&self.water_to_light, &waters);
+        let temperatures = self.map_vector(&self.light_to_temperature, &lights);
+        let humidities = self.map_vector(&self.temperature_to_humidity, &temperatures);
+        self.map_vector(&self.humidity_to_location, &humidities)
     }
 }
 
@@ -96,7 +103,14 @@ impl Almanac {
 fn test_perform_map() {
     let almanac = Almanac::from_file("resources/day05_sample.txt");
     assert_eq!(almanac.perform_map(&almanac.seed_to_soil, 79), 81);
-    assert_eq!(almanac.map_vector(&almanac.seed_to_soil, &almanac.seeds), [81,14,57,13]);
+    assert_eq!(
+        almanac.map_vector(&almanac.seed_to_soil, &almanac.seeds),
+        [81, 14, 57, 13]
+    );
+    assert_eq!(
+        almanac.seed_to_location(),
+        [82, 43, 86, 35]
+    );
 }
 
 // Parser

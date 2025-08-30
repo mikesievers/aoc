@@ -9,32 +9,37 @@ use days::*;
 fn main() {
     println!("The following outputs the results of all days.");
 
-    // Day 1
+    // Day 01
     let day01_p1 = day01::sum_calibration_values("resources/day01_input.txt");
     println!("Day 01 part 01: {}", day01_p1);
 
     let day01_p2 = day01::sum_subbed_calibration_values("resources/day01_input.txt");
     println!("Day 01 part 02: {}", day01_p2); // 55902 is wrong
 
-    // Day 2
+    // Day 02
     let day02_p1 = day02::sum_possible_games("resources/day02_input.txt");
     println!("Day 02 part 01: {}", day02_p1);
 
     let day02_p2 = day02::sum_power("resources/day02_input.txt");
     println!("Day 02 part 01: {}", day02_p2);
 
-    // Day 3
+    // Day 03
     let day03_p1 = day03::sum_of_parts("resources/day03_input.txt");
     println!("Day 03 part 01: {}", day03_p1);
     // 9633538 is too high!
     let day03_p2 = day03::sum_gear_products("resources/day03_input.txt");
     println!("Day 03 part 02: {}", day03_p2);
 
-    // Day4
+    // Day 04
     let day04_p1_stack = day04::Stack::from("resources/day04_input.txt");
     println!("Day 04 part 01: {}", day04_p1_stack.sum_scores());
 
     // Part2: 9425061
     //println!("Day 04 part 02: {}", day04_p1_stack.sum_all_cards());
     println!("Day 04 part 02: 9425061 (Not calculated on the fly because of slow recursion)");
+
+    // Day 05
+    // Part1: 313045984
+    let almanac = day05::Almanac::from_file("resources/day05_input.txt");
+    println!("Day 05 part 01: {}", almanac.minimum_location());
 }

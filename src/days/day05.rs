@@ -3,13 +3,7 @@
 // See https://docs.rs/nom/8.0.0/nom/index.html
 
 use nom::{
-    IResult, Parser,
-    bytes::complete::tag,
-    character::complete::{char, line_ending, one_of},
-    combinator::{map, recognize},
-    error::Error,
-    multi::{many0, many1, separated_list1},
-    sequence::{preceded, terminated},
+    bytes::complete::tag, character::complete::{char, i32, line_ending, newline, one_of}, combinator::{map, recognize}, error::Error, multi::{many0, many1, separated_list1}, sequence::{delimited, preceded, terminated}, IResult, Parser
 };
 
 use std::fs::{self, read_to_string};
@@ -66,15 +60,8 @@ fn decimal(input: &str) -> IResult<&str, String> {
     .parse(input)
 }
 
-fn decimal_nr(input: &str) -> IResult<&str, i32> {
-    map(recognize(many1(one_of("0123456789"))), |s: &str| {
-        s.parse().expect("Could not parse into integer")
-    })
-    .parse(input)
-}
-
 fn decimal_line(input: &str) -> IResult<&str, Vec<i32>> {
-    terminated(separated_list1(tag(" "), decimal_nr), line_ending).parse(input)
+    terminated(separated_list1(tag(" "), i32), line_ending).parse(input)
 }
 
 fn seed_section(input: &str) -> IResult<&str, Vec<i32>> {
@@ -93,9 +80,11 @@ fn test_parsing() {
     let mystr = "10000";
     //let res = mystr.parse::<i32>().unwrap();
 
-    let res = decimal_nr.parse(mystr).unwrap();
+    //let res = decimal_nr.parse(mystr).unwrap();
+    //let res: i32 = nom::character::complete::i32::<&str, nom::error::Error<&str>>(mystr).unwrap().1;
+    let res: i32 = i32::<&str, Error<&str>>(mystr).unwrap().1;
 
-    assert_eq!(res.1, 10000);
+    assert_eq!(res, 10000);
 
     let mystr = "1 2 3\r\n";
     let res = decimal_line.parse(mystr).unwrap();

@@ -19,8 +19,9 @@ impl Almanac {
 
         // Parser for a single integer
 
-        let seeds = vec![];
+        //let seeds = vec![];
         let seed_to_soil = vec![];
+        let (input, seeds) = seed_section.parse(input.as_str()).unwrap();
 
         Self {
             seeds,

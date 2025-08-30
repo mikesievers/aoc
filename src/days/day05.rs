@@ -5,13 +5,14 @@
 use nom::{
     IResult, Parser,
     bytes::complete::tag,
-    character::complete::{char, one_of, line_ending},
+    character::complete::{char, line_ending, one_of},
     combinator::{map, recognize},
+    error::Error,
     multi::{many0, many1, separated_list1},
-    sequence::terminated,
+    sequence::{preceded, terminated},
 };
 
-use std::fs;
+use std::fs::{self, read_to_string};
 #[derive(Debug, PartialEq, Eq)]
 pub struct Almanac {
     pub seeds: Vec<i32>,
@@ -21,7 +22,6 @@ pub struct Almanac {
 impl Almanac {
     fn from_file(fname: &str) -> Self {
         let input = fs::read_to_string(fname).expect("Could not read input file.");
-        let input = String::from("seeds: 3 4 5");
 
         // Parser for a single integer
 
@@ -77,6 +77,10 @@ fn decimal_line(input: &str) -> IResult<&str, Vec<i32>> {
     terminated(separated_list1(tag(" "), decimal_nr), line_ending).parse(input)
 }
 
+fn seed_section(input: &str) -> IResult<&str, Vec<i32>> {
+    preceded(tag("seeds: "), decimal_line).parse(input)
+}
+
 #[test]
 fn test_parsing() {
     let mystr = "10000";
@@ -91,4 +95,9 @@ fn test_parsing() {
 
     assert_eq!(res.1, vec![1, 2, 3]);
     assert_eq!(res.0, "");
+
+    let input = read_to_string("resources/day05_sample.txt").unwrap();
+    let seeds_res = seed_section.parse(input.as_str()).unwrap();
+
+    assert_eq!(seeds_res.1, vec![79, 14, 55, 13])
 }

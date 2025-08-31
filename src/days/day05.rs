@@ -5,7 +5,13 @@
 // See https://docs.rs/nom/8.0.0/nom/index.html
 
 use nom::{
-    bytes::complete::tag, character::complete::{char, i64, line_ending, newline, one_of, space1}, combinator::{map, recognize}, error::Error, multi::{many0, many1, separated_list1}, sequence::{delimited, preceded, terminated, tuple}, IResult, Parser
+    IResult, Parser,
+    bytes::complete::tag,
+    character::complete::{char, i64, line_ending, newline, one_of, space1},
+    combinator::{map, recognize},
+    error::Error,
+    multi::{many0, many1, separated_list1},
+    sequence::{delimited, preceded, terminated, tuple},
 };
 
 use std::fs::{self, read_to_string};
@@ -95,8 +101,42 @@ impl Almanac {
     pub fn minimum_location(&self) -> i64 {
         *self.seed_to_location().iter().min().unwrap()
     }
+
+    // Part 2
+
+    pub fn minimum_location_in_ranges(&self) -> Option<i64> {
+        let mut minimum: Option<i64> = None;
+        // *self.seed_ranges_to_location().iter().min().unwrap()
+        for chunk in self.seeds.chunks_exact(2) {
+            let seed_start = chunk[0];
+            let range = chunk[1];
+            for seed in seed_start..(seed_start + range) {
+                let soil = self.perform_map(&self.seed_to_soil, seed);
+                let fertilizer = self.perform_map(&self.soil_to_fertilizer, soil);
+                let water = self.perform_map(&self.fertilizer_to_water, fertilizer);
+                let light = self.perform_map(&self.water_to_light, water);
+                let temperature = self.perform_map(&self.light_to_temperature, light);
+                let humidity = self.perform_map(&self.temperature_to_humidity, temperature);
+                let location = self.perform_map(&self.humidity_to_location, humidity);
+
+                minimum = match minimum {
+                    None => Some(location),
+                    Some(min) => Some(min.min(location)),
+                };
+            }
+        }
+        minimum
+    }
 }
 
+// Part 2
+#[test]
+fn test_part2(){
+    let almanac = Almanac::from_file("resources/day05_sample.txt");
+    assert_eq!(almanac.minimum_location_in_ranges(), Some(46));
+}
+
+// Part 1
 #[test]
 fn test_perform_map() {
     let almanac = Almanac::from_file("resources/day05_sample.txt");
@@ -152,9 +192,7 @@ fn seed_section(input: &str) -> IResult<&str, Vec<i64>> {
 fn parse_named_section(section_name: &str) -> impl Fn(&str) -> IResult<&str, Vec<Vec<i64>>> {
     let header = format!("\n{} map:", section_name);
 
-    move |input: &str| {
-        preceded((tag(header.as_str()), tag("\n")), many1(decimal_line)).parse(input)
-    }
+    move |input: &str| preceded((tag(header.as_str()), tag("\n")), many1(decimal_line)).parse(input)
 }
 
 #[test]

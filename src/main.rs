@@ -42,4 +42,8 @@ fn main() {
     // Part1: 313045984
     let almanac = day05::Almanac::from_file("resources/day05_input.txt");
     println!("Day 05 part 01: {}", almanac.minimum_location());
+
+    // Part2:
+    //println!("Day 05 part 02: {}", almanac.minimum_location_in_ranges().unwrap());
+    println!("Day 05 part 02:  (Not calculated dynamically because long running brute force was performed)");
 }

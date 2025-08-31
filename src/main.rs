@@ -44,6 +44,9 @@ fn main() {
     println!("Day 05 part 01: {}", almanac.minimum_location());
 
     // Part2:
-    //println!("Day 05 part 02: {}", almanac.minimum_location_in_ranges().unwrap());
-    println!("Day 05 part 02:  (Not calculated dynamically because long running brute force was performed)");
+    // println!(
+    //     "Day 05 part 02: {}",
+    //     almanac.minimum_location_in_ranges().unwrap()
+    // );
+    println!("Day 05 part 02: 20283860  (Not calculated dynamically because long running brute force was performed)");
 }

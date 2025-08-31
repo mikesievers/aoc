@@ -109,6 +109,7 @@ impl Almanac {
         // *self.seed_ranges_to_location().iter().min().unwrap()
         for chunk in self.seeds.chunks_exact(2) {
             let seed_start = chunk[0];
+            println!("chunk {seed_start}");
             let range = chunk[1];
             for seed in seed_start..(seed_start + range) {
                 let soil = self.perform_map(&self.seed_to_soil, seed);

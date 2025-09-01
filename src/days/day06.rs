@@ -38,6 +38,14 @@ impl RaceLog {
         Self { time, distance }
     }
 
+    pub fn from_bad_kerning_file(fname: &str) -> Self {
+        let data = read_to_string(fname).unwrap().replace(" ", "");
+
+        let (_, (time, distance)) = (time_line, distance_line).parse(data.as_str()).unwrap();
+
+        Self { time, distance }
+    }
+
     pub fn winning_range_length(&self, time: i64, distance: i64) -> i64 {
         let delta = (-(distance as f64) + ((time * time) as f64) / 4.0).sqrt();
         let mut from = (time as f64) / 2.0 - delta;
@@ -69,7 +77,7 @@ impl RaceLog {
 
 // <space>*<i64><space>+<i64>...<space>*<line_ending>
 fn number_line(input: &str) -> IResult<&str, Vec<i64>> {
-    delimited(space1, separated_list1(space1, i64), space0).parse(input)
+    delimited(space0, separated_list1(space1, i64), space0).parse(input)
 }
 
 fn time_line(input: &str) -> IResult<&str, Vec<i64>> {
@@ -85,6 +93,10 @@ fn test_range_lengths() {
     let race_log = RaceLog::from_file("resources/day06_sample.txt");
 
     assert_eq!(race_log.winning_ranges_product(), 288);
+
+    // Part 2
+    let race_log = RaceLog::from_bad_kerning_file("resources/day06_sample.txt");
+    assert_eq!(race_log.winning_ranges_product(), 71503);
 }
 
 #[test]

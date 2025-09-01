@@ -53,5 +53,8 @@ fn main() {
     // Day 06
     // Part1: 219849
     let race_log = day06::RaceLog::from_file("resources/day06_input.txt");
-    println!("Day 06 part 01: {}", race_log.winning_ranges_product())
+    println!("Day 06 part 01: {}", race_log.winning_ranges_product());
+    // Part2: 29432455
+    let race_log = day06::RaceLog::from_bad_kerning_file("resources/day06_input.txt");
+    println!("Day 06 part 01: {}", race_log.winning_ranges_product());
 }

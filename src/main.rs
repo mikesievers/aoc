@@ -49,4 +49,9 @@ fn main() {
     //     almanac.minimum_location_in_ranges().unwrap()
     // );
     println!("Day 05 part 02: 20283860  (Not calculated dynamically because long running brute force was performed)");
+
+    // Day 06
+    // Part1: 219849
+    let race_log = day06::RaceLog::from_file("resources/day06_input.txt");
+    println!("Day 06 part 01: {}", race_log.winning_ranges_product())
 }

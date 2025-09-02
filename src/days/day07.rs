@@ -29,20 +29,30 @@
 // but 77888 is stronger because its third card is stronger (and both hands have
 // the same first and second card).
 
-use std::fs::read_to_string;
+use std::{collections::HashMap, fs::read_to_string};
 
 use nom::{
     IResult, Parser,
     bytes::complete::tag,
-    character::complete::{i64, line_ending, one_of, space0, space1},
+    character::complete::{i64, line_ending, one_of, space0},
     combinator::map,
-    multi::{count, many1, separated_list1},
-    sequence::{delimited, preceded, terminated},
+    multi::{count, separated_list1},
+    sequence::delimited,
 };
 
 // Models
-
 #[derive(Debug, PartialOrd, PartialEq, Eq)]
+enum HandType {
+    HighCard,
+    OnePair,
+    TwoPair,
+    ThreeOfAKind,
+    FullHouse,
+    FourOfAKind,
+    FiveOfAKind,
+}
+
+#[derive(Hash, Debug, PartialOrd, PartialEq, Eq)]
 enum Card {
     Two,
     Three,
@@ -63,6 +73,7 @@ enum Card {
 struct Hand {
     cards: Vec<Card>,
     bid: i64,
+    //hand_type: HandType,
 }
 
 #[derive(Debug)]
@@ -140,4 +151,62 @@ fn test_parsing() {
 
     let game = Game::from_file("resources/day07_sample.txt");
     println!("{:?}", game);
+}
+
+impl Game {
+    fn score_hand(cards: Vec<Card>) -> HandType {
+        let mut frequencies: HashMap<Card, usize> = HashMap::new();
+        for card in cards {
+            *frequencies.entry(card).or_insert(0) += 1;
+        }
+
+        let counts: Vec<i32> = frequencies
+            .iter()
+            .map(|(_card, count)| *count as i32)
+            .collect();
+
+        if counts.contains(&5) {
+            return HandType::FiveOfAKind;
+        }
+        if counts.contains(&4) {
+            return HandType::FourOfAKind;
+        }
+        if counts.contains(&3) && counts.contains(&2) {
+            return HandType::FullHouse;
+        }
+        if counts.contains(&3) {
+            return HandType::ThreeOfAKind;
+        }
+        if counts.len() == 3 && counts.contains(&1) && counts.contains(&2) {
+            return HandType::TwoPair;
+        }
+        if counts.contains(&2) {
+            return HandType::OnePair;
+        }
+        HandType::HighCard
+    }
+}
+
+#[test]
+fn test_score() {
+    let cards = vec![Card::Four, Card::Four, Card::Four, Card::Four, Card::Four];
+    assert_eq!(Game::score_hand(cards), HandType::FiveOfAKind);
+
+    let cards = vec![Card::T, Card::T, Card::T, Card::T, Card::Two];
+    assert_eq!(Game::score_hand(cards), HandType::FourOfAKind);
+
+    let cards = vec![Card::T, Card::T, Card::T, Card::Two, Card::Two];
+    assert_eq!(Game::score_hand(cards), HandType::FullHouse);
+
+    let cards = vec![Card::T, Card::T, Card::T, Card::Three, Card::Two];
+    assert_eq!(Game::score_hand(cards), HandType::ThreeOfAKind);
+
+    let cards = vec![Card::K, Card::T, Card::T, Card::K, Card::Two];
+    assert_eq!(Game::score_hand(cards), HandType::TwoPair);
+
+    let cards = vec![Card::Q, Card::T, Card::J, Card::Q, Card::Two];
+    assert_eq!(Game::score_hand(cards), HandType::OnePair);
+
+    let cards = vec![Card::Q, Card::T, Card::J, Card::Four, Card::Two];
+    assert_eq!(Game::score_hand(cards), HandType::HighCard);
 }

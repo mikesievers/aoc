@@ -29,8 +29,15 @@
 // but 77888 is stronger because its third card is stronger (and both hands have
 // the same first and second card).
 
+use std::fs::read_to_string;
+
 use nom::{
-    bytes::complete::tag, character::complete::{i64, line_ending, one_of, space0, space1}, combinator::map, multi::count, sequence::{delimited, preceded, terminated}, IResult, Parser
+    IResult, Parser,
+    bytes::complete::tag,
+    character::complete::{i64, line_ending, one_of, space0, space1},
+    combinator::map,
+    multi::{count, many1, separated_list1},
+    sequence::{delimited, preceded, terminated},
 };
 
 // Models
@@ -52,13 +59,23 @@ enum Card {
     A,
 }
 
+#[derive(Debug)]
 struct Hand {
     cards: Vec<Card>,
     bid: i64,
 }
 
+#[derive(Debug)]
 struct Game {
-    hands: Vec<Card>,
+    hands: Vec<Hand>,
+}
+
+impl Game {
+    pub fn from_file(input: &str) -> Self {
+        let input = read_to_string(input).unwrap();
+        let (_, hands) = parse_game(input.as_str()).unwrap();
+        Game { hands }
+    }
 }
 
 #[test]
@@ -91,22 +108,36 @@ fn parse_card(input: &str) -> IResult<&str, Card> {
     })
     .parse(input)
 }
-fn parse_hand(input: &str) -> IResult<&str, Vec<Card>> {
+fn parse_cards(input: &str) -> IResult<&str, Vec<Card>> {
     count(parse_card, 5).parse(input)
 }
 
 fn parse_bid(input: &str) -> IResult<&str, i64> {
-    delimited(tag(" "), i64, terminated(space0, line_ending)).parse(input)
+    delimited(tag(" "), i64, space0).parse(input)
+}
+
+fn parse_hand(input: &str) -> IResult<&str, Hand> {
+    map((parse_cards, parse_bid), |(cards, bid)| Hand { cards, bid }).parse(input)
+}
+
+fn parse_game(input: &str) -> IResult<&str, Vec<Hand>> {
+    separated_list1(line_ending, parse_hand).parse(input)
 }
 
 #[test]
 fn test_parsing() {
     let hand_str = "QQT92";
-    let (_, hand) = parse_hand(hand_str).unwrap();
+    let (_, hand) = parse_cards(hand_str).unwrap();
     assert_eq!(hand, vec![Card::Q, Card::Q, Card::T, Card::Nine, Card::Two]);
 
     let row = "TTT32 28 \n";
-    let (_, (hand, bid)) = (parse_hand, parse_bid).parse(row).unwrap();
-    assert_eq!(hand, vec![Card::T, Card::T, Card::T, Card::Three, Card::Two]);
+    let (_, (hand, bid)) = (parse_cards, parse_bid).parse(row).unwrap();
+    assert_eq!(
+        hand,
+        vec![Card::T, Card::T, Card::T, Card::Three, Card::Two]
+    );
     assert_eq!(bid, 28);
+
+    let game = Game::from_file("resources/day07_sample.txt");
+    println!("{:?}", game);
 }

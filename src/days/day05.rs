@@ -7,11 +7,10 @@
 use nom::{
     IResult, Parser,
     bytes::complete::tag,
-    character::complete::{char, i64, line_ending, newline, one_of, space1},
-    combinator::{map, recognize},
+    character::complete::{i64, space1},
     error::Error,
-    multi::{many0, many1, separated_list1},
-    sequence::{delimited, preceded, terminated, tuple},
+    multi::{many1, separated_list1},
+    sequence::{preceded, terminated},
 };
 
 use std::fs::{self, read_to_string};
@@ -132,7 +131,7 @@ impl Almanac {
 
 // Part 2
 #[test]
-fn test_part2(){
+fn test_part2() {
     let almanac = Almanac::from_file("resources/day05_sample.txt");
     assert_eq!(almanac.minimum_location_in_ranges(), Some(46));
 }

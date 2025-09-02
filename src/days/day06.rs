@@ -21,8 +21,6 @@ use nom::multi::separated_list1;
 use nom::sequence::delimited;
 use nom::{IResult, Parser};
 use std::fs::read_to_string;
-use std::num;
-use std::ops::Range;
 
 pub struct RaceLog {
     time: Vec<i64>,
@@ -59,8 +57,8 @@ impl RaceLog {
             to -= 1.0;
         }
 
-        let mut ifrom = from.ceil() as i64;
-        let mut ito = to.floor() as i64;
+        let ifrom = from.ceil() as i64;
+        let ito = to.floor() as i64;
 
         ito - ifrom + 1
     }

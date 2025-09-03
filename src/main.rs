@@ -61,6 +61,9 @@ fn main() {
     // Day 07
     // Part1: 252052080
     let game = day07::Game::from_file("resources/day07_input.txt");
-    println!("Day 07 part 01: {}", game.winnings())
+    println!("Day 07 part 01: {}", game.winnings());
 
+    // Part 2: 252898370
+    let game2 = day07p2::Game::from_file("resources/day07_input.txt");
+    println!("Day 07 part 02: {}", game2.winnings());
 }

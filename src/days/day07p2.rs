@@ -70,18 +70,49 @@ impl Game {
         Game { hands }
     }
 
-    fn score_hand(cards: &Vec<Card>) -> HandType {
+    fn score_hand(orig_cards: &Vec<Card>) -> HandType {
         let mut frequencies: HashMap<Card, usize> = HashMap::new();
+
+        // Count the jokers separately, they can augment any card
+        let mut jokers = 0;
+        let mut cards = orig_cards.clone();
+
         for card in cards {
-            *frequencies.entry(*card).or_insert(0) += 1;
+            match card {
+                Card::J => {
+                    jokers += 1;
+                }
+                _ => {
+                    *frequencies.entry(card).or_insert(0) += 1;
+                }
+            }
         }
 
-        let counts: Vec<i32> = frequencies
+        let mut counts: Vec<i32> = frequencies
             .iter()
             .map(|(_card, count)| *count as i32)
             .collect();
 
-        if counts.contains(&5) {
+        // No counts means only jokers
+        if jokers == 5 {
+            return HandType::FiveOfAKind;
+        }
+
+        // Add the number of jokers to the highest count
+        let max_count = counts.iter().max();
+        match max_count {
+            Some(max_count) => {
+                for idx in 0..5 {
+                    if counts[idx] == *max_count {
+                        counts[idx] += jokers;
+                        break;
+                    }
+                }
+            }
+            _ => {}
+        }
+
+        if counts.contains(&(5)) {
             return HandType::FiveOfAKind;
         }
         if counts.contains(&4) {
@@ -185,10 +216,24 @@ fn test_parsing() {
 
 #[test]
 fn test_score() {
+    // 5
     let cards = vec![Card::Four, Card::Four, Card::Four, Card::Four, Card::Four];
     assert_eq!(Game::score_hand(&cards), HandType::FiveOfAKind);
 
-    let cards = vec![Card::T, Card::T, Card::T, Card::T, Card::Two];
+    let cards = vec![Card::Four, Card::Four, Card::J, Card::Four, Card::Four];
+    assert_eq!(Game::score_hand(&cards), HandType::FiveOfAKind);
+
+    let cards = vec![Card::J, Card::Four, Card::J, Card::Four, Card::Four];
+    assert_eq!(Game::score_hand(&cards), HandType::FiveOfAKind);
+
+    let cards = vec![Card::J, Card::Four, Card::J, Card::J, Card::J];
+    assert_eq!(Game::score_hand(&cards), HandType::FiveOfAKind);
+
+    let cards = vec![Card::J, Card::J, Card::J, Card::J, Card::J];
+    assert_eq!(Game::score_hand(&cards), HandType::FiveOfAKind);
+
+    // 4
+    let cards = vec![Card::T, Card::T, Card::T, Card::J, Card::Two];
     assert_eq!(Game::score_hand(&cards), HandType::FourOfAKind);
 
     let cards = vec![Card::T, Card::T, Card::T, Card::Two, Card::Two];
@@ -201,10 +246,10 @@ fn test_score() {
     assert_eq!(Game::score_hand(&cards), HandType::TwoPair);
 
     let cards = vec![Card::Q, Card::T, Card::J, Card::Q, Card::Two];
-    assert_eq!(Game::score_hand(&cards), HandType::OnePair);
+    assert_eq!(Game::score_hand(&cards), HandType::ThreeOfAKind);
 
     let cards = vec![Card::Q, Card::T, Card::J, Card::Four, Card::Two];
-    assert_eq!(Game::score_hand(&cards), HandType::HighCard);
+    assert_eq!(Game::score_hand(&cards), HandType::OnePair);
 }
 
 // Hand: Ordering
@@ -259,5 +304,5 @@ fn test_ordering() {
 fn test_winnings() {
     let game = Game::from_file("resources/day07_sample.txt");
 
-    assert_eq!(game.winnings(), 6440);
+    assert_eq!(game.winnings(), 5905);
 }

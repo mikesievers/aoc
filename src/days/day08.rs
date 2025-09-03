@@ -22,6 +22,12 @@ struct Node<'a> {
     connections: (&'a str, &'a str),
 }
 
+#[derive(PartialEq, Debug)]
+enum Direction {
+    L,
+    R,
+}
+
 impl<'a> Map<'a> {
     pub fn from_file(input: &str) -> Self {
         let data = read_to_string(input).unwrap();
@@ -38,14 +44,27 @@ impl<'a> Map<'a> {
             nodes,
         }
     }
-}
 
-#[derive(PartialEq, Debug)]
-enum Direction {
-    L,
-    R,
-}
+    pub fn path_length(&self) -> i64 {
+        let mut current_node = "AAA";
+        let mut dir_idx = 0_usize;
+        let mut path_length = 0;
 
+        loop {
+            path_length += 1;
+            current_node = match self.directions[dir_idx] {
+                Direction::L => self.nodes.get(current_node).unwrap().0,
+                Direction::R => self.nodes.get(current_node).unwrap().1,
+            };
+            if current_node == "ZZZ" {
+                break;
+            }
+            dir_idx = (dir_idx + 1) % self.directions.len();
+        }
+
+        path_length
+    }
+}
 fn parse_direction(input: &str) -> IResult<&str, Direction> {
     map(one_of("LR"), |c| match c {
         'L' => Direction::L,
@@ -54,6 +73,8 @@ fn parse_direction(input: &str) -> IResult<&str, Direction> {
     })
     .parse(input)
 }
+
+// Parsers
 
 fn direction_line(input: &str) -> IResult<&str, Vec<Direction>> {
     terminated(many1(parse_direction), line_ending).parse(input)
@@ -88,7 +109,7 @@ fn node(input: &str) -> IResult<&str, Node> {
 }
 
 fn node_list(input: &str) -> IResult<&str, Vec<Node>> {
-    preceded(line_ending,separated_list1(line_ending, node)).parse(input)
+    preceded(line_ending, separated_list1(line_ending, node)).parse(input)
 }
 
 #[test]
@@ -126,4 +147,13 @@ fn test_read_map() {
     let map = Map::from_file("resources/day08_sample.txt");
 
     println!("{:?}", map);
+}
+
+#[test]
+fn test_part1() {
+    let map = Map::from_file("resources/day08_sample.txt");
+    assert_eq!(map.path_length(), 2);
+
+    let map = Map::from_file("resources/day08_sample2.txt");
+    assert_eq!(map.path_length(), 6);
 }

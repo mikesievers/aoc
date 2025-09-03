@@ -68,4 +68,9 @@ fn main() {
     // Part 2: 252898370
     let game2 = day07p2::Game::from_file("resources/day07_input.txt");
     println!("Day 07 part 02: {}", game2.winnings());
+
+    // Day 08
+    // Part1: 22411
+    let map = day08::Map::from_file("resources/day08_input.txt");
+    println!("Day 08 part 01: {}", map.path_length());
 }

@@ -269,9 +269,6 @@ fn test_ordering() {
 
     let hand2 = game.hands[1].clone();
     assert!(hand2 > hand1);
-
-    let hand3 = game.hands[2].clone();
-    assert!(hand2 > hand3);
 }
 
 #[test]

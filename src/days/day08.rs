@@ -67,6 +67,7 @@ impl<'a> Map<'a> {
     }
 
     // Part 2, start on all nodes ending on "A"
+    // NOTE: This would have worked eventually, but is way too slow by brute force.
     pub fn multi_path_length(&self) -> i64 {
         let mut current_nodes: Vec<&str> = self
             .nodes
@@ -198,9 +199,62 @@ fn test_part1() {
 
 #[test]
 fn test_part2() {
-    let map = Map::from_file("resources/day08p2sample.txt");
+    //let map = Map::from_file("resources/day08p2sample.txt");
+    let map = Map::from_file("resources/day08_input.txt");
     println!("Map: {:?}", map);
-    assert_eq!(map.multi_path_length(), 6);
-    //let map = Map::from_file("resources/day08_input.txt");
     //assert_eq!(map.multi_path_length(), 6);
+
+    // The 6 starts are:
+    // XVA
+    // GGA
+    // DXA
+    // LTA
+    // BJA
+    // AAA
+    assert_eq!(map.path_length("XVA"), 16271);
+    assert_eq!(map.path_length("GGA"), 24253);
+    assert_eq!(map.path_length("DXA"), 13201);
+    assert_eq!(map.path_length("LTA"), 14429);
+    assert_eq!(map.path_length("BJA"), 18113);
+    assert_eq!(map.path_length("AAA"), 22411);
+
+    // prime factors:
+    // 16271
+    //  |	\
+    // 307	 	53
+
+    // 24253
+    //  |	\
+    // 307	 	79
+
+    // 13201
+    //  |	\
+    // 307	 	43
+
+    // 14429
+    //  |	\
+    // 307	 	47
+
+    // 18113
+    //  |	\
+    // 307	 	59
+
+    // 22411
+    //  |	\
+    // 307	 	73
+
+    // The path_lenghts from the endings:
+    assert_eq!(map.path_length("FCZ"), 18113);
+    assert_eq!(map.path_length("RPZ"), 14429);
+    assert_eq!(map.path_length("GHZ"), 13201);
+    assert_eq!(map.path_length("GSZ"), 24253);
+    assert_eq!(map.path_length("ZZZ"), 22411);
+    assert_eq!(map.path_length("QXZ"), 16271);
+
+    // The cycles are therefore the same, starting from *A or from *Z,
+    // And all cycles meet after taking the product of their prime factors (counting 307 only once)
+    assert_eq!(
+        307_i64 * 53_i64 * 79_i64 * 43_i64 * 47_i64 * 59_i64 * 73_i64,
+        11188774513823_i64
+    );
 }

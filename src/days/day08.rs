@@ -45,8 +45,8 @@ impl<'a> Map<'a> {
         }
     }
 
-    pub fn path_length(&self) -> i64 {
-        let mut current_node = "AAA";
+    pub fn path_length(&self, start: &str) -> i64 {
+        let mut current_node = start;
         let mut dir_idx = 0_usize;
         let mut path_length = 0;
 
@@ -56,7 +56,8 @@ impl<'a> Map<'a> {
                 Direction::L => self.nodes.get(current_node).unwrap().0,
                 Direction::R => self.nodes.get(current_node).unwrap().1,
             };
-            if current_node == "ZZZ" {
+            //if current_node == end {
+            if current_node.ends_with("Z") {
                 break;
             }
             dir_idx = (dir_idx + 1) % self.directions.len();
@@ -89,6 +90,9 @@ impl<'a> Map<'a> {
             }
 
             let z_nodes = current_nodes.iter().filter(|&&n| n.ends_with('Z')).count();
+            if z_nodes > 3 {
+                println!("z_nodes: {z_nodes} path_length: {path_length}");
+            }
             if z_nodes == current_nodes.len() {
                 break;
             }
@@ -186,10 +190,10 @@ fn test_read_map() {
 #[test]
 fn test_part1() {
     let map = Map::from_file("resources/day08_sample.txt");
-    assert_eq!(map.path_length(), 2);
+    assert_eq!(map.path_length("AAA"), 2);
 
     let map = Map::from_file("resources/day08_sample2.txt");
-    assert_eq!(map.path_length(), 6);
+    assert_eq!(map.path_length("AAA"), 6);
 }
 
 #[test]

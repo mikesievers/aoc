@@ -75,7 +75,7 @@ impl Game {
 
         // Count the jokers separately, they can augment any card
         let mut jokers = 0;
-        let mut cards = orig_cards.clone();
+        let cards = orig_cards.clone();
 
         for card in cards {
             match card {

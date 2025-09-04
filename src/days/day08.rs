@@ -11,6 +11,7 @@ use nom::{
 
 #[derive(Debug)]
 pub struct Map<'a> {
+    #[allow(dead_code)]
     data: String, // Own the file contents
     directions: Vec<Direction>,
     nodes: HashMap<&'a str, (&'a str, &'a str)>,
@@ -65,7 +66,6 @@ impl<'a> Map<'a> {
 
         path_length
     }
-
 }
 fn parse_direction(input: &str) -> IResult<&str, Direction> {
     map(one_of("LR"), |c| match c {

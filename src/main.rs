@@ -73,4 +73,6 @@ fn main() {
     // Part1: 22411
     let map = day08::Map::from_file("resources/day08_input.txt");
     println!("Day 08 part 01: {}", map.path_length());
+    // Part2: 
+    println!("Day 08 part 02: {}", map.multi_path_length());
 }

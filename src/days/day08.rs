@@ -3,7 +3,7 @@ use std::{collections::HashMap, fs::read_to_string};
 use nom::{
     IResult, Parser,
     bytes::tag,
-    character::complete::{alpha1, line_ending, newline, one_of},
+    character::complete::{alpha1, alphanumeric1, line_ending, newline, one_of},
     combinator::{map, recognize},
     multi::{count, many1, separated_list1},
     sequence::{delimited, preceded, terminated, tuple},
@@ -64,6 +64,39 @@ impl<'a> Map<'a> {
 
         path_length
     }
+
+    // Part 2, start on all nodes ending on "A"
+    pub fn multi_path_length(&self) -> i64 {
+        let mut current_nodes: Vec<&str> = self
+            .nodes
+            .keys()
+            .into_iter()
+            .filter(|n| n.ends_with('A'))
+            .map(|a| *a)
+            .collect();
+
+        let mut dir_idx = 0_usize;
+        let mut path_length = 0;
+
+        loop {
+            path_length += 1;
+
+            for node_idx in 0..current_nodes.len() {
+                current_nodes[node_idx] = match self.directions[dir_idx] {
+                    Direction::L => self.nodes.get(current_nodes[node_idx]).unwrap().0,
+                    Direction::R => self.nodes.get(current_nodes[node_idx]).unwrap().1,
+                };
+            }
+
+            let z_nodes = current_nodes.iter().filter(|&&n| n.ends_with('Z')).count();
+            if z_nodes == current_nodes.len() {
+                break;
+            }
+            dir_idx = (dir_idx + 1) % self.directions.len();
+        }
+
+        path_length
+    }
 }
 fn parse_direction(input: &str) -> IResult<&str, Direction> {
     map(one_of("LR"), |c| match c {
@@ -82,7 +115,8 @@ fn direction_line(input: &str) -> IResult<&str, Vec<Direction>> {
 
 // "AAA"
 fn node_name(input: &str) -> IResult<&str, &str> {
-    recognize(alpha1).parse(input)
+    alphanumeric1.parse(input)
+    //alpha1.parse(input)
 }
 
 // " = (AAA, BBB)"
@@ -156,4 +190,13 @@ fn test_part1() {
 
     let map = Map::from_file("resources/day08_sample2.txt");
     assert_eq!(map.path_length(), 6);
+}
+
+#[test]
+fn test_part2() {
+    let map = Map::from_file("resources/day08p2sample.txt");
+    println!("Map: {:?}", map);
+    assert_eq!(map.multi_path_length(), 6);
+    //let map = Map::from_file("resources/day08_input.txt");
+    //assert_eq!(map.multi_path_length(), 6);
 }

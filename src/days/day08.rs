@@ -3,10 +3,10 @@ use std::{collections::HashMap, fs::read_to_string};
 use nom::{
     IResult, Parser,
     bytes::tag,
-    character::complete::{alpha1, alphanumeric1, line_ending, newline, one_of},
-    combinator::{map, recognize},
-    multi::{count, many1, separated_list1},
-    sequence::{delimited, preceded, terminated, tuple},
+    character::complete::{alphanumeric1, line_ending, one_of},
+    combinator::map,
+    multi::{many1, separated_list1},
+    sequence::{delimited, preceded, terminated},
 };
 
 #[derive(Debug)]
@@ -66,42 +66,6 @@ impl<'a> Map<'a> {
         path_length
     }
 
-    // Part 2, start on all nodes ending on "A"
-    // NOTE: This would have worked eventually, but is way too slow by brute force.
-    pub fn multi_path_length(&self) -> i64 {
-        let mut current_nodes: Vec<&str> = self
-            .nodes
-            .keys()
-            .into_iter()
-            .filter(|n| n.ends_with('A'))
-            .map(|a| *a)
-            .collect();
-
-        let mut dir_idx = 0_usize;
-        let mut path_length = 0;
-
-        loop {
-            path_length += 1;
-
-            for node_idx in 0..current_nodes.len() {
-                current_nodes[node_idx] = match self.directions[dir_idx] {
-                    Direction::L => self.nodes.get(current_nodes[node_idx]).unwrap().0,
-                    Direction::R => self.nodes.get(current_nodes[node_idx]).unwrap().1,
-                };
-            }
-
-            let z_nodes = current_nodes.iter().filter(|&&n| n.ends_with('Z')).count();
-            if z_nodes > 3 {
-                println!("z_nodes: {z_nodes} path_length: {path_length}");
-            }
-            if z_nodes == current_nodes.len() {
-                break;
-            }
-            dir_idx = (dir_idx + 1) % self.directions.len();
-        }
-
-        path_length
-    }
 }
 fn parse_direction(input: &str) -> IResult<&str, Direction> {
     map(one_of("LR"), |c| match c {
@@ -121,7 +85,6 @@ fn direction_line(input: &str) -> IResult<&str, Vec<Direction>> {
 // "AAA"
 fn node_name(input: &str) -> IResult<&str, &str> {
     alphanumeric1.parse(input)
-    //alpha1.parse(input)
 }
 
 // " = (AAA, BBB)"
@@ -202,7 +165,6 @@ fn test_part2() {
     //let map = Map::from_file("resources/day08p2sample.txt");
     let map = Map::from_file("resources/day08_input.txt");
     println!("Map: {:?}", map);
-    //assert_eq!(map.multi_path_length(), 6);
 
     // The 6 starts are:
     // XVA

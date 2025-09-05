@@ -75,4 +75,9 @@ fn main() {
     println!("Day 08 part 01: {}", map.path_length("AAA"));
     // Part2: 11188774513823  (answer is too low!)
     println!("Day 08 part 02: 11188774513823 (calculated from individual paths)");
+
+    // Day 09
+    // Part1: 2005352194
+    let report = day09::Report::from_file("resources/day09_input.txt");
+    println!("Day 09 part 01: {}", report.predictions_sum());
 }

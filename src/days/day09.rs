@@ -5,7 +5,7 @@ use nom::character::complete::{i64, line_ending};
 use nom::{IResult, character::complete::space1, multi::separated_list1};
 
 // Structs
-struct Report {
+pub struct Report {
     histories: Vec<Vec<i64>>,
 }
 
@@ -15,14 +15,46 @@ impl Report {
         let (_, histories) = number_line_file.parse(data.as_str()).unwrap();
         Report { histories }
     }
+
+    // The prediction is the last value of the line plus the prediction of the line below it
+    // ... until the last line is only zeroes
+    pub fn predict_value(&self, line: &Vec<i64>) -> i64 {
+        if line.iter().filter(|n| **n != 0_i64).count() == 0 {
+            return 0;
+        };
+
+        // Calculate the vector of differences
+        let delta_line = line
+            .iter()
+            .zip(line.iter().skip(1))
+            .map(|(n_i, n_i_plus_1)| *n_i_plus_1 - *n_i)
+            .collect();
+
+        let last_value = line[line.len() - 1];
+        last_value + self.predict_value(&delta_line)
+    }
+
+    pub fn predictions_sum(&self) -> i64 {
+        self.histories
+            .iter()
+            .map(|history| self.predict_value(history))
+            .sum()
+    }
 }
 
 #[test]
-fn test_report(){
+fn test_report() {
     let report = Report::from_file("resources/day09_sample.txt");
-    
+
     assert_eq!(report.histories.len(), 3);
-    assert_eq!(report.histories[1], vec![1_i64, 3_i64, 6_i64, 10_i64, 15_i64, 21_i64]);
+    assert_eq!(
+        report.histories[1],
+        vec![1_i64, 3_i64, 6_i64, 10_i64, 15_i64, 21_i64]
+    );
+
+    assert_eq!(report.predict_value(&report.histories[0]), 18);
+
+    assert_eq!(report.predictions_sum(), 114);
 }
 
 // Parsers
@@ -30,7 +62,7 @@ fn number_line(input: &str) -> IResult<&str, Vec<i64>> {
     separated_list1(space1, i64).parse(input)
 }
 
-fn number_line_file(input: &str) -> IResult<&str, Vec<Vec<i64>>>{
+fn number_line_file(input: &str) -> IResult<&str, Vec<Vec<i64>>> {
     separated_list1(line_ending, number_line).parse(input)
 }
 
@@ -44,9 +76,6 @@ fn test_number_line() {
 }
 
 #[test]
-fn test_number_line_file(){
+fn test_number_line_file() {
     let data = read_to_string("resources/day09_sample.txt");
-
-
-
 }

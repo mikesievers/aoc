@@ -80,4 +80,6 @@ fn main() {
     // Part1: 2005352194
     let report = day09::Report::from_file("resources/day09_input.txt");
     println!("Day 09 part 01: {}", report.predictions_sum());
+    // Part2: 1077
+    println!("Day 09 part 02: {}", report.postdictions_sum());
 }

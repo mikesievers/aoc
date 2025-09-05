@@ -40,6 +40,31 @@ impl Report {
             .map(|history| self.predict_value(history))
             .sum()
     }
+
+    // Part 2
+    // Predict the value to the left
+    pub fn postdict_value(&self, line: &Vec<i64>) -> i64 {
+        if line.iter().filter(|n| **n != 0_i64).count() == 0 {
+            return 0;
+        };
+
+        // Calculate the vector of differences
+        let delta_line = line
+            .iter()
+            .zip(line.iter().skip(1))
+            .map(|(n_i, n_i_plus_1)| *n_i_plus_1 - *n_i)
+            .collect();
+
+        let first_value = line[0];
+        first_value - self.postdict_value(&delta_line)
+    }
+
+    pub fn postdictions_sum(&self) -> i64 {
+        self.histories
+            .iter()
+            .map(|history| self.postdict_value(history))
+            .sum()
+    }
 }
 
 #[test]
@@ -54,7 +79,11 @@ fn test_report() {
 
     assert_eq!(report.predict_value(&report.histories[0]), 18);
 
+    // Predictions of the rightmost number
     assert_eq!(report.predictions_sum(), 114);
+
+    // Predictions of the leftmost number
+    assert_eq!(report.postdictions_sum(), 2);
 }
 
 // Parsers

@@ -12,11 +12,28 @@
 // Possible good to solve with https://github.com/petgraph/petgraph?tab=readme-ov-file
 // Petgraph on docs.rs => https://docs.rs/petgraph/latest/petgraph/index.html
 
+use std::fs::read_to_string;
+
 struct Grid {
     tiles: Vec<Vec<char>>,
+}
+
+impl Grid {
+    pub fn from_file(fname: &str) -> Self {
+        let data = read_to_string(fname).unwrap();
+        let tiles = data
+            .lines()
+            .into_iter()
+            .map(|line| line.chars().collect())
+            .collect();
+        Grid { tiles }
+    }
 }
 
 #[test]
 fn test_read_graph() {
     let grid = Grid::from_file("resources/day10_sample1.txt");
+
+    assert_eq!(grid.tiles.len(), 5);
+    assert_eq!(grid.tiles[0].len(), 5);
 }

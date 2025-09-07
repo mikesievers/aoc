@@ -12,10 +12,12 @@
 // Possible good to solve with https://github.com/petgraph/petgraph?tab=readme-ov-file
 // Petgraph on docs.rs => https://docs.rs/petgraph/latest/petgraph/index.html
 
+use petgraph::graphmap::UnGraphMap;
 use std::fs::read_to_string;
 
 struct Grid {
     tiles: Vec<Vec<char>>,
+    graph: UnGraphMap<(usize, usize), i64>,
 }
 
 impl Grid {
@@ -26,14 +28,31 @@ impl Grid {
             .into_iter()
             .map(|line| line.chars().collect())
             .collect();
-        Grid { tiles }
+
+        let graph = Grid::tiles_to_graph(&tiles);
+        Grid { tiles, graph }
+    }
+
+    fn tiles_to_graph(tiles: &Vec<Vec<char>>) -> UnGraphMap<(usize, usize), i64> {
+        let graph = UnGraphMap::new();
+
+        assert_eq!("NEXT", "IMPLEMENT READING OF MAP");
+        graph
+    }
+
+    pub fn height(&self) -> usize {
+        self.tiles.len()
+    }
+
+    pub fn width(&self) -> usize {
+        self.tiles[0].len()
     }
 }
 
 #[test]
-fn test_read_graph() {
+fn test_grid() {
     let grid = Grid::from_file("resources/day10_sample1.txt");
 
-    assert_eq!(grid.tiles.len(), 5);
-    assert_eq!(grid.tiles[0].len(), 5);
+    assert_eq!(grid.height(), 5);
+    assert_eq!(grid.width(), 5);
 }

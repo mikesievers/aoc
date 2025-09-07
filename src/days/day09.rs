@@ -103,8 +103,3 @@ fn test_number_line() {
         ("", vec![1_i64, 2_i64, 3_i64, 4_i64])
     );
 }
-
-#[test]
-fn test_number_line_file() {
-    let data = read_to_string("resources/day09_sample.txt");
-}

@@ -29,40 +29,35 @@ impl Grid {
             .map(|line| line.chars().collect())
             .collect();
 
-        let graph = Grid::tiles_to_graph(&tiles);
-        Grid { tiles, graph }
+        let graph = UnGraphMap::new();
+        let mut grid = Grid { tiles, graph };
+
+        grid.tiles_to_graph();
+
+        grid
     }
 
-    fn tiles_to_graph(tiles: &Vec<Vec<char>>) -> UnGraphMap<(usize, usize), i64> {
-        let mut graph = UnGraphMap::new();
-        let y_max = tiles.len() - 1; // The maximum index is one smaller than the len()
-        let x_max = tiles[0].len() - 1;
-
+    fn tiles_to_graph(&mut self) -> () {
         // For all tiles
         // - determine whether two legal tiles are being connected
         // - add the two tiles to the graph if not already present
         // - add the connection between them as an edge
-        for (y, row) in tiles.iter().enumerate() {
+        for (y, row) in self.tiles.iter().enumerate() {
             for (x, c) in row.iter().enumerate() {
-                if let Some((n1, n2)) = Grid::connected_nodes((y, x), c, (x_max, y_max)) {
+                if let Some((n1, n2)) = self.connected_nodes((y, x)) {
                     println!("{c}");
-                    graph.add_node(n1);
-                    graph.add_node(n2);
-                    graph.add_edge(n1, n2, 1_i64);
+                    self.graph.add_node(n1);
+                    self.graph.add_node(n2);
+                    self.graph.add_edge(n1, n2, 1_i64);
                 }
             }
         }
-
-        graph
     }
 
-    fn connected_nodes(
-        (y, x): (usize, usize),
-        tile: &char,
-        (y_max, x_max): (usize, usize),
-    ) -> Option<((usize, usize), (usize, usize))> {
+    fn connected_nodes(&self, (y, x): (usize, usize)) -> Option<((usize, usize), (usize, usize))> {
+        let tile = self.tiles.get(y)?.get(x)?;
         let is_legal_tile = |y: isize, x: isize| -> Option<(usize, usize)> {
-            if y <= y_max as isize && x <= x_max as isize {
+            if y < self.height() as isize && x < self.width() as isize {
                 Some((y as usize, x as usize))
             } else {
                 None

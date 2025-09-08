@@ -43,12 +43,23 @@ impl Grid {
         // - add the two tiles to the graph if not already present
         // - add the connection between them as an edge
         for (y, row) in self.tiles.iter().enumerate() {
-            for (x, c) in row.iter().enumerate() {
+            for (x, _c) in row.iter().enumerate() {
                 if let Some((n1, n2)) = self.connected_nodes((y, x)) {
-                    println!("{c}");
-                    self.graph.add_node(n1);
-                    self.graph.add_node(n2);
-                    self.graph.add_edge(n1, n2, 1_i64);
+                    if let (Some(neighbors_n1), Some(neighbors_n2)) =
+                        (self.connected_nodes(n1), self.connected_nodes(n2))
+                    {
+                        if (neighbors_n1.0 == n1 || neighbors_n1.1 == n1)
+                            && (neighbors_n2.0 == n2 || neighbors_n2.1 == n2)
+                        {
+                            unimplemented!(
+                                "Add the treatment of 'S' - either include in logic or replace by valid piece before "
+                            );
+
+                            self.graph.add_node(n1);
+                            self.graph.add_node(n2);
+                            self.graph.add_edge(n1, n2, 1_i64);
+                        }
+                    }
                 }
             }
         }

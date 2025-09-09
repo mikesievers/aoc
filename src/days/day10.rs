@@ -164,6 +164,70 @@ impl Grid {
         // it's OK to return the total length, because the DFS stops one short of the original node
         Some(length)
     }
+
+    // Part 2:
+    // It is necessary to find which which nodes are completely enclosed by the
+    // loop and which are outside of it.
+    //
+    // Approach:
+    // Use ray casting:
+    // - cast a ray
+    // - count the number of times the loop is traversed
+    // - an uneven count means the cell is in the loop
+    // - to avoid running along edges, don't check on the same level
+    //   - but count the number of nodes to the right with a connection
+    //     to the node below them
+    pub fn count_inside_nodes(&self) -> i32 {
+        let mut inside_nodes = 0;
+
+        for (y, row) in self.tiles.iter().enumerate() {
+            for (x, _c) in row.iter().enumerate() {
+                if self.is_inside((y, x)) {
+                    inside_nodes += 1;
+                }
+            }
+        }
+
+        inside_nodes
+    }
+
+    fn is_inside(&self, node: (usize, usize)) -> bool {
+        // Any part of the graph can't be outside
+        if self.graph.contains_node(node) {
+            return false;
+        }
+        // any node at top or bottom is outside
+        if node.0 == 0 || node.0 == self.height() {
+            return false;
+        }
+
+        // All other nodes need to cast a ray to the right and count intersections
+        let mut nr_intersections = 0;
+
+        for x in node.1 + 1..self.width() - 1 {
+            let ref_node = (node.0, x);
+            let south_node = (node.0 - 1, x);
+            if self.graph.contains_edge(ref_node, south_node)
+                || self.graph.contains_edge(south_node, ref_node)
+            {
+                nr_intersections += 1;
+            }
+        }
+
+        nr_intersections % 2 != 0
+    }
+}
+
+#[test]
+fn test_part2() {
+    let grid = Grid::from_file("resources/day10p2_sample0.txt");
+    assert_eq!(grid.count_inside_nodes(), 4);
+
+    let grid = Grid::from_file("resources/day10p2_sample2.txt");
+    assert_eq!(grid.count_inside_nodes(), 8);
+
+    let grid = Grid::from_file("resources/day10p2_sample1.txt");
+    assert_eq!(grid.count_inside_nodes(), 10);
 }
 
 #[test]

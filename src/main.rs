@@ -82,4 +82,10 @@ fn main() {
     println!("Day 09 part 01: {}", report.predictions_sum());
     // Part2: 1077
     println!("Day 09 part 02: {}", report.postdictions_sum());
+
+    // Day 10
+    // Part1: 
+    let grid = day10::Grid::from_file("resources/day10_input.txt");
+    let cycle_length = grid.cycle_length().unwrap();
+    println!("Day 10 part 01: {}", cycle_length as f64 / 2.0);
 }

@@ -13,11 +13,13 @@
 // Petgraph on docs.rs => https://docs.rs/petgraph/latest/petgraph/index.html
 
 use petgraph::graphmap::UnGraphMap;
+use petgraph::visit::Dfs;
 use std::fs::read_to_string;
 
-struct Grid {
+pub struct Grid {
     tiles: Vec<Vec<char>>,
     graph: UnGraphMap<(usize, usize), i64>,
+    start: Option<(usize, usize)>,
 }
 
 impl Grid {
@@ -30,11 +32,26 @@ impl Grid {
             .collect();
 
         let graph = UnGraphMap::new();
-        let mut grid = Grid { tiles, graph };
+        let mut grid = Grid {
+            tiles,
+            graph,
+            start: None,
+        };
 
         grid.tiles_to_graph();
+        grid.find_start();
 
         grid
+    }
+
+    fn find_start(&mut self) -> () {
+        for (y, row) in self.tiles.iter().enumerate() {
+            for (x, c) in row.iter().enumerate() {
+                if *c == 'S' {
+                    self.start = Some((y, x))
+                }
+            }
+        }
     }
 
     fn tiles_to_graph(&mut self) -> () {
@@ -44,72 +61,85 @@ impl Grid {
         // - add the connection between them as an edge
         for (y, row) in self.tiles.iter().enumerate() {
             for (x, _c) in row.iter().enumerate() {
-                if let Some((n1, n2)) = self.connected_nodes((y, x)) {
-                    if let (Some(neighbors_n1), Some(neighbors_n2)) =
-                        (self.connected_nodes(n1), self.connected_nodes(n2))
-                    {
-                        if (neighbors_n1.0 == n1 || neighbors_n1.1 == n1)
-                            && (neighbors_n2.0 == n2 || neighbors_n2.1 == n2)
-                        {
-                            unimplemented!(
-                                "Add the treatment of 'S' - either include in logic or replace by valid piece before "
-                            );
+                let this_node = (y, x);
+                let south_node = (this_node.0 + 1, this_node.1);
+                let east_node = (this_node.0, this_node.1 + 1);
 
-                            self.graph.add_node(n1);
-                            self.graph.add_node(n2);
-                            self.graph.add_edge(n1, n2, 1_i64);
-                        }
-                    }
+                if self.is_connected_south(this_node, south_node) {
+                    self.graph.add_node(this_node);
+                    self.graph.add_node(south_node);
+                    self.graph.add_edge(this_node, south_node, 1_i64);
+                }
+
+                if self.is_connected_east(this_node, east_node) {
+                    self.graph.add_node(this_node);
+                    self.graph.add_node(east_node);
+                    self.graph.add_edge(this_node, east_node, 1_i64);
                 }
             }
         }
     }
 
-    fn connected_nodes(&self, (y, x): (usize, usize)) -> Option<((usize, usize), (usize, usize))> {
-        let tile = self.tiles.get(y)?.get(x)?;
-        let is_legal_tile = |y: isize, x: isize| -> Option<(usize, usize)> {
-            if y < self.height() as isize && x < self.width() as isize {
-                Some((y as usize, x as usize))
-            } else {
-                None
-            }
-        };
+    fn is_connected_south(&self, node: (usize, usize), south_node: (usize, usize)) -> bool {
+        let tile = self.tiles.get(node.0).unwrap().get(node.1).unwrap();
 
-        match tile {
-            // | is a vertical pipe connecting north and south.
-            // - is a horizontal pipe connecting east and west.
-            // L is a 90-degree bend connecting north and east.
-            // J is a 90-degree bend connecting north and west.
-            // 7 is a 90-degree bend connecting south and west.
-            // F is a 90-degree bend connecting south and east.
-            // . is ground; there is no pipe in this tile.
-            // S is the starting position of the animal; there is a pipe on this tile, but your sketch doesn't show what shape the pipe has.
-            '|' => Some((
-                is_legal_tile(y as isize - 1, x as isize)?,
-                is_legal_tile(y as isize + 1, x as isize)?,
-            )),
-            '-' => Some((
-                is_legal_tile(y as isize, x as isize - 1)?,
-                is_legal_tile(y as isize, x as isize + 1)?,
-            )),
-            'L' => Some((
-                is_legal_tile(y as isize - 1, x as isize)?,
-                is_legal_tile(y as isize, x as isize + 1)?,
-            )),
-            'J' => Some((
-                is_legal_tile(y as isize - 1, x as isize)?,
-                is_legal_tile(y as isize, x as isize - 1)?,
-            )),
-            '7' => Some((
-                is_legal_tile(y as isize + 1, x as isize)?,
-                is_legal_tile(y as isize, x as isize - 1)?,
-            )),
-            'F' => Some((
-                is_legal_tile(y as isize + 1, x as isize)?,
-                is_legal_tile(y as isize, x as isize + 1)?,
-            )),
-            _ => None,
+        if south_node.0 >= self.height() || south_node.1 >= self.width() {
+            return false;
         }
+
+        let south_tile = self
+            .tiles
+            .get(south_node.0)
+            .unwrap()
+            .get(south_node.1)
+            .unwrap();
+
+        (*tile == '|' && *south_tile == 'L')
+            || (*tile == '|' && *south_tile == 'J')
+            || (*tile == '|' && *south_tile == '|')
+            || (*tile == '|' && *south_tile == 'S')
+            || (*tile == 'S' && *south_tile == 'L')
+            || (*tile == 'S' && *south_tile == 'J')
+            || (*tile == 'S' && *south_tile == '|')
+            || (*tile == '7' && *south_tile == 'L')
+            || (*tile == '7' && *south_tile == 'J')
+            || (*tile == '7' && *south_tile == '|')
+            || (*tile == '7' && *south_tile == 'S')
+            || (*tile == 'F' && *south_tile == 'L')
+            || (*tile == 'F' && *south_tile == 'J')
+            || (*tile == 'F' && *south_tile == '|')
+            || (*tile == 'F' && *south_tile == 'S')
+    }
+
+    fn is_connected_east(&self, node: (usize, usize), east_node: (usize, usize)) -> bool {
+        let tile = self.tiles.get(node.0).unwrap().get(node.1).unwrap();
+
+        if east_node.0 >= self.height() || east_node.1 >= self.width() {
+            return false;
+        }
+
+        let east_tile = self
+            .tiles
+            .get(east_node.0)
+            .unwrap()
+            .get(east_node.1)
+            .unwrap();
+
+        (*tile == '-' && *east_tile == '7')
+            || (*tile == '-' && *east_tile == 'J')
+            || (*tile == '-' && *east_tile == '-')
+            || (*tile == '-' && *east_tile == 'S')
+            || (*tile == 'S' && *east_tile == '7')
+            || (*tile == 'S' && *east_tile == 'J')
+            || (*tile == 'S' && *east_tile == '-')
+            || (*tile == 'F' && *east_tile == '7')
+            || (*tile == 'F' && *east_tile == 'J')
+            || (*tile == 'F' && *east_tile == '-')
+            || (*tile == 'F' && *east_tile == 'S')
+            || (*tile == 'L' && *east_tile == '7')
+            || (*tile == 'L' && *east_tile == 'J')
+            || (*tile == 'L' && *east_tile == '-')
+            || (*tile == 'L' && *east_tile == 'S')
     }
 
     pub fn height(&self) -> usize {
@@ -118,6 +148,21 @@ impl Grid {
 
     pub fn width(&self) -> usize {
         self.tiles[0].len()
+    }
+
+    pub fn cycle_length(&self) -> Option<usize> {
+        let mut length = 0;
+
+        let mut dfs = Dfs::new(&self.graph, self.start.unwrap());
+        while let Some(nx) = dfs.next(&self.graph) {
+            if length > 0 && nx == self.start.unwrap() {
+                println!("node: {:?}", nx);
+                return Some(length);
+            }
+            length += 1;
+        }
+        // it's OK to return the total length, because the DFS stops one short of the original node
+        Some(length)
     }
 }
 
@@ -128,5 +173,11 @@ fn test_grid() {
     assert_eq!(grid.height(), 5);
     assert_eq!(grid.width(), 5);
 
-    assert_eq!(grid.graph.node_count(), 8);
+    assert_eq!(grid.start, Some((1, 1)));
+
+    // All nodes connected to a neighbor node somehow
+    assert_eq!(grid.graph.node_count(), 17);
+
+    // length of the loop from S
+    assert_eq!(grid.cycle_length(), Some(8));
 }

@@ -20,6 +20,7 @@ use std::fs::read_to_string;
 pub struct Grid {
     tiles: Vec<Vec<char>>,
     graph: UnGraphMap<(usize, usize), i64>,
+    subgraph: UnGraphMap<(usize, usize), i64>,
     start: Option<(usize, usize)>,
 }
 
@@ -33,14 +34,17 @@ impl Grid {
             .collect();
 
         let graph = UnGraphMap::new();
+        let subgraph = UnGraphMap::new();
         let mut grid = Grid {
             tiles,
             graph,
+            subgraph,
             start: None,
         };
 
         grid.tiles_to_graph();
         grid.find_start();
+        grid.graph_to_subgraph();
 
         grid
     }
@@ -172,6 +176,20 @@ impl Grid {
             || (*tile == 'L' && *east_tile == 'S')
     }
 
+    pub fn graph_to_subgraph(&mut self) -> () {
+        // Add all nodes of the graph's cycle to a subgraph
+        // Skip the nodes - they are not needed as of now
+
+        // The start is part of the subgraph:
+        self.subgraph.add_node(self.start.unwrap());
+
+        // Walk the cycle and add each node
+        let mut dfs = Dfs::new(&self.graph, self.start.unwrap());
+        while let Some(nx) = dfs.next(&self.graph) {
+            self.subgraph.add_node(nx);
+        }
+    }
+
     pub fn height(&self) -> usize {
         self.tiles.len()
     }
@@ -213,7 +231,7 @@ impl Grid {
             for (x, _c) in row.iter().enumerate() {
                 if self.is_inside((y, x)) {
                     inside_nodes += 1;
-                    println!("Inside: {:?}", (y, x))
+                    // println!("Inside: {:?}", (y, x))
                 }
             }
         }
@@ -223,8 +241,7 @@ impl Grid {
 
     fn is_inside(&self, node: (usize, usize)) -> bool {
         // Any part of the loop can't be outside
-        println!("node {:?}", node);
-        if self.graph.contains_node(node) {
+        if self.subgraph.contains_node(node) {
             return false;
         }
         // any node at top or bottom not part of the graph is outside
@@ -239,7 +256,7 @@ impl Grid {
 
         // inspect all nodes to the right
         for x in node.1 + 1..self.width() {
-            if !self.graph.contains_node((node.0, x)) {
+            if !self.subgraph.contains_node((node.0, x)) {
                 continue;
             }
             match self.tiles.get(node.0).unwrap().get(x).unwrap() {
@@ -293,10 +310,11 @@ fn test_part2() {
     assert_eq!(grid.count_inside_nodes(), 8);
 
     let grid = Grid::from_file("resources/day10p2_sample1.txt");
-    for row in grid.tiles.clone() {
-        println!("{:?}", row);
-    }
-    println!("Graph: {:?}", grid.graph);
+    // for row in grid.tiles.clone() {
+    //     println!("{:?}", row);
+    // }
+    //println!("Graph: {:?}", grid.graph);
+    // println!("SubGraph: {:?}", grid.subgraph.nodes());
     assert_eq!(grid.count_inside_nodes(), 10);
 }
 

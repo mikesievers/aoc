@@ -88,4 +88,6 @@ fn main() {
     let grid = day10::Grid::from_file("resources/day10_input.txt");
     let cycle_length = grid.cycle_length().unwrap();
     println!("Day 10 part 01: {}", cycle_length as f64 / 2.0);
+    // Part2: 367
+    println!("Day 10 part 02: {}", grid.count_inside_nodes());
 }

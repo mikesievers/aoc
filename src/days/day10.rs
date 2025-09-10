@@ -14,6 +14,7 @@
 
 use petgraph::graphmap::UnGraphMap;
 use petgraph::visit::Dfs;
+use std::cmp::{max, min};
 use std::fs::read_to_string;
 
 pub struct Grid {
@@ -45,13 +46,42 @@ impl Grid {
     }
 
     fn find_start(&mut self) -> () {
-        for (y, row) in self.tiles.iter().enumerate() {
+        'outer_loop: for (y, row) in self.tiles.iter().enumerate() {
             for (x, c) in row.iter().enumerate() {
                 if *c == 'S' {
-                    self.start = Some((y, x))
+                    self.start = Some((y, x));
+                    break 'outer_loop;
                 }
             }
         }
+        // place correct tile at the start
+        let start = self.start.unwrap();
+        let neighbors: Vec<_> = self.graph.neighbors(start).collect();
+        let n1 = neighbors[0];
+        let n2 = neighbors[1];
+        let mut start_tile = '_';
+
+        // vertical pipe
+        if n1.1 == n2.1 {
+            start_tile = '|';
+        // horizontal
+        } else if n1.0 == n2.0 {
+            start_tile = '-';
+        // one connection in the west
+        } else if min(n1.1, n2.1) == start.1 - 1 {
+            if min(n1.0, n2.0) as i32 == (start.0 as i32 - 1) {
+                start_tile = 'J';
+            } else {
+                start_tile = '7';
+            }
+        // Only up/down to east missing
+        } else if max(n1.0, n2.0) as i32 == (start.0 - 1) as i32 {
+            start_tile = 'L';
+        } else {
+            start_tile = 'F';
+        }
+        // finally, set the start tile
+        self.tiles[start.0][start.1] = start_tile;
     }
 
     fn tiles_to_graph(&mut self) -> () {
@@ -156,7 +186,6 @@ impl Grid {
         let mut dfs = Dfs::new(&self.graph, self.start.unwrap());
         while let Some(nx) = dfs.next(&self.graph) {
             if length > 0 && nx == self.start.unwrap() {
-                println!("node: {:?}", nx);
                 return Some(length);
             }
             length += 1;
@@ -184,6 +213,7 @@ impl Grid {
             for (x, _c) in row.iter().enumerate() {
                 if self.is_inside((y, x)) {
                     inside_nodes += 1;
+                    println!("Inside: {:?}", (y, x))
                 }
             }
         }
@@ -192,30 +222,66 @@ impl Grid {
     }
 
     fn is_inside(&self, node: (usize, usize)) -> bool {
-        // Any part of the graph can't be outside
+        // Any part of the loop can't be outside
+        println!("node {:?}", node);
         if self.graph.contains_node(node) {
             return false;
         }
-        // any node at top or bottom is outside
-        if node.0 == 0 || node.0 == self.height() {
+        // any node at top or bottom not part of the graph is outside
+        if node.0 == 0 || node.0 == self.height() - 1 {
             return false;
         }
 
         // All other nodes need to cast a ray to the right and count intersections
         let mut nr_intersections = 0;
 
-        for x in node.1 + 1..self.width() - 1 {
-            let ref_node = (node.0, x);
-            let south_node = (node.0 - 1, x);
-            if self.graph.contains_edge(ref_node, south_node)
-                || self.graph.contains_edge(south_node, ref_node)
-            {
-                nr_intersections += 1;
+        let mut crossing_state = CrossingState::None;
+
+        // inspect all nodes to the right
+        for x in node.1 + 1..self.width() {
+            if !self.graph.contains_node((node.0, x)) {
+                continue;
+            }
+            match self.tiles.get(node.0).unwrap().get(x).unwrap() {
+                // plain edge
+                '|' => {
+                    nr_intersections += 1;
+                }
+                // from north
+                'L' => {
+                    crossing_state = CrossingState::N; // connection from north
+                }
+                'J' if crossing_state == CrossingState::N => {
+                    crossing_state = CrossingState::None; // going back up, no crossing
+                }
+                '7' if crossing_state == CrossingState::N => {
+                    crossing_state = CrossingState::None; // going down
+                    nr_intersections += 1; // this is an intersection
+                }
+                // from south
+                'F' => {
+                    crossing_state = CrossingState::S;
+                }
+                '7' if crossing_state == CrossingState::S => {
+                    crossing_state = CrossingState::None;
+                }
+                'J' if crossing_state == CrossingState::S => {
+                    crossing_state = CrossingState::None;
+                    nr_intersections += 1;
+                }
+                _ => {}
             }
         }
 
         nr_intersections % 2 != 0
     }
+}
+
+#[derive(PartialEq)]
+enum CrossingState {
+    N,
+    S,
+    None,
 }
 
 #[test]
@@ -227,6 +293,10 @@ fn test_part2() {
     assert_eq!(grid.count_inside_nodes(), 8);
 
     let grid = Grid::from_file("resources/day10p2_sample1.txt");
+    for row in grid.tiles.clone() {
+        println!("{:?}", row);
+    }
+    println!("Graph: {:?}", grid.graph);
     assert_eq!(grid.count_inside_nodes(), 10);
 }
 

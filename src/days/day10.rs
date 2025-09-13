@@ -63,6 +63,7 @@ impl Grid {
         let neighbors: Vec<_> = self.graph.neighbors(start).collect();
         let n1 = neighbors[0];
         let n2 = neighbors[1];
+        #[allow(unused_assignments)]
         let mut start_tile = '_';
 
         // vertical pipe

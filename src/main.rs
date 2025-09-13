@@ -84,10 +84,17 @@ fn main() {
     println!("Day 09 part 02: {}", report.postdictions_sum());
 
     // Day 10
-    // Part1: 
+    // Part1:
     let grid = day10::Grid::from_file("resources/day10_input.txt");
     let cycle_length = grid.cycle_length().unwrap();
     println!("Day 10 part 01: {}", cycle_length as f64 / 2.0);
     // Part2: 367
     println!("Day 10 part 02: {}", grid.count_inside_nodes());
+
+    // Day 11
+    // Part1: 9536038
+    let universe = day11::Universe::from_file("resources/day11_input.txt");
+    println!("Day 10 part 01: {}", universe.distance_sum());
+
 }
+

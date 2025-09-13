@@ -1,6 +1,7 @@
+use itertools::Itertools;
 use std::{collections::HashSet, fs::read_to_string};
 
-struct Universe {
+pub struct Universe {
     space: Vec<Vec<char>>,
     galaxies: Vec<(usize, usize)>,
     empty_rows: HashSet<usize>,
@@ -67,6 +68,14 @@ impl Universe {
 
         expanded_galaxies
     }
+
+    pub fn distance_sum(&self) -> i32 {
+        self.expanded_galaxies()
+            .iter()
+            .combinations(2)
+            .map(|c| (c[1].0 as i32 - c[0].0 as i32).abs() + (c[1].1 as i32 - c[0].1 as i32).abs())
+            .sum()
+    }
 }
 
 #[test]
@@ -93,6 +102,18 @@ pub fn test_universe() {
     );
     assert_eq!(
         universe.expanded_galaxies(),
-        vec![(0, 4), (1, 9), (2, 0), (5, 8), (6, 1), (7, 12), (10, 9), (11, 0), (11, 5)]
+        vec![
+            (0, 4),
+            (1, 9),
+            (2, 0),
+            (5, 8),
+            (6, 1),
+            (7, 12),
+            (10, 9),
+            (11, 0),
+            (11, 5)
+        ]
     );
+
+    assert_eq!(universe.distance_sum(), 374);
 }

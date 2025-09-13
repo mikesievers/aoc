@@ -49,7 +49,7 @@ impl Universe {
         (empty_rows, empty_columns, galaxies)
     }
 
-    fn expanded_galaxies(&self) -> Vec<(usize, usize)> {
+    fn expanded_galaxies(&self, distance: usize) -> Vec<(usize, usize)> {
         let mut expanded_galaxies = Vec::new();
 
         for galaxy in &self.galaxies {
@@ -63,17 +63,37 @@ impl Universe {
                 .iter()
                 .filter(|&&col_idx| col_idx < galaxy.1)
                 .count();
-            expanded_galaxies.push((galaxy.0 + space_before_y, galaxy.1 + space_before_x));
+            expanded_galaxies.push((
+                galaxy.0 + distance * space_before_y,
+                galaxy.1 + distance * space_before_x,
+            ));
         }
 
-        expanded_galaxies
+        self.galaxies
+            .iter()
+            .map(|&g| {
+                let pos_y = (0..g.0)
+                    .map(|y| match self.empty_rows.contains(&y) {
+                        false => 1,
+                        true => distance,
+                    })
+                    .sum();
+                let pos_x = (0..g.1)
+                    .map(|x| match self.empty_columns.contains(&x) {
+                        false => 1,
+                        true => distance,
+                    })
+                    .sum();
+                (pos_y, pos_x)
+            })
+            .collect::<Vec<(usize, usize)>>()
     }
 
-    pub fn distance_sum(&self) -> i32 {
-        self.expanded_galaxies()
+    pub fn distance_sum(&self, distance: usize) -> i64 {
+        self.expanded_galaxies(distance)
             .iter()
             .combinations(2)
-            .map(|c| (c[1].0 as i32 - c[0].0 as i32).abs() + (c[1].1 as i32 - c[0].1 as i32).abs())
+            .map(|c| (c[1].0 as i64 - c[0].0 as i64).abs() + (c[1].1 as i64 - c[0].1 as i64).abs())
             .sum()
     }
 }
@@ -101,7 +121,7 @@ pub fn test_universe() {
         ]
     );
     assert_eq!(
-        universe.expanded_galaxies(),
+        universe.expanded_galaxies(2),
         vec![
             (0, 4),
             (1, 9),
@@ -115,5 +135,7 @@ pub fn test_universe() {
         ]
     );
 
-    assert_eq!(universe.distance_sum(), 374);
+    assert_eq!(universe.distance_sum(2), 374);
+    assert_eq!(universe.distance_sum(10), 1030);
+    assert_eq!(universe.distance_sum(100), 8410);
 }

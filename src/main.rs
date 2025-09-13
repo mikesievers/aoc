@@ -94,7 +94,7 @@ fn main() {
     // Day 11
     // Part1: 9536038
     let universe = day11::Universe::from_file("resources/day11_input.txt");
-    println!("Day 10 part 01: {}", universe.distance_sum());
-
+    println!("Day 10 part 01: {}", universe.distance_sum(2));
+    // Part2: 447744640566
+    println!("Day 10 part 01: {}", universe.distance_sum(1000000));
 }
-

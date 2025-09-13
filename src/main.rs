@@ -97,4 +97,9 @@ fn main() {
     println!("Day 11 part 01: {}", universe.distance_sum(2));
     // Part2: 447744640566
     println!("Day 11 part 01: {}", universe.distance_sum(1000000));
+
+    // Day 12
+    // Part1:
+    let records = day12::Ledger::from_file("resources/day12_input.txt");
+    println!("Day 12 part 01: {}", records.sum_match_counts());
 }

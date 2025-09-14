@@ -1,6 +1,5 @@
 use itertools::Itertools;
 use nom::multi::count;
-use onig::{Regex, RegexOptions, Syntax};
 use std::fs::read_to_string;
 
 // Springs:
@@ -14,12 +13,6 @@ use std::fs::read_to_string;
 // - find all possible match positions for the first group
 //   - For each matching position, find the matching positions of the remaining subgroups
 //   - For the last subgroup, return a match if possible, otherwise the number of matching positions
-
-// This is a recursive counting of matches:
-// - Consider the whole string, does position 0 fit the first group?
-//   - If yes, count all the possibilities in which the following groups match the rest of the string.
-//   - If not all groups match, don't count as a match
-//   - => need to track the number of matching groups and the number of groups matching overall
 
 #[derive(Debug)]
 pub struct Ledger {
@@ -57,7 +50,7 @@ impl Ledger {
     pub fn sum_match_counts(&self) -> usize {
         self.records
             .iter()
-            .map(|record| count_matches(record.chars.as_str(), &record.groups, 0))
+            .map(|record| count_matches(record.chars.as_str(), &record.groups))
             .sum()
     }
 }
@@ -69,6 +62,35 @@ fn test_records() {
     println!("records:\n{}", ledger.data);
     println!("Ledger:\n{:?}", ledger);
     assert_eq!(ledger.sum_match_counts(), 21);
+}
+
+fn count_matches(line: &str, groups: &Vec<usize>) -> usize {
+    let mut count = 0;
+    let mut chars: Vec<char> = line.chars().collect();
+    let jokers: Vec<usize> = chars
+        .iter()
+        .enumerate()
+        .filter(|(_, c)| **c == '?')
+        .map(|(idx, _)| idx)
+        .collect();
+
+    // loop over all possible combinations
+
+    let states = ['.', '#'];
+    let combinations = std::iter::repeat(states.iter().cloned())
+        .take(jokers.len())
+        .multi_cartesian_product();
+
+    for combination in combinations {
+        for (idx, state) in combination.iter().enumerate() {
+            chars[jokers[idx]] = *state;
+        }
+        let groups_found = get_groups(&chars);
+        if groups_found == *groups {
+            count += 1;
+        }
+    }
+    count
 }
 
 fn get_groups(chars: &Vec<char>) -> Vec<usize> {
@@ -99,84 +121,50 @@ fn test_get_groups() {
     assert_eq!(grps, Vec::<usize>::from([2, 1, 3, 1]));
 }
 
-fn count_matches(line: &str, groups: &Vec<usize>, groups_matched: usize) -> usize {
-    let text = "aaab";
-    let re = Regex::with_options(
-        r"(a+)(b+)",
-        RegexOptions::REGEX_OPTION_NONE,
-        Syntax::default(),
-    )
-    .unwrap();
+#[test]
+fn test_count_matches() {
+    let str1 = "???.###";
+    assert_eq!(count_matches(str1, &Vec::from([1, 3])), 3);
+}
 
-    // Collect all matches
-    let mut results = Vec::new();
-    let mut region = onig::Region::new();
+fn is_group_matching(input: &String, grp_size: usize) -> bool {
+    // A string that is too short can't match
+    if input.len() < grp_size {
+        return false;
+    };
 
-    // `search_with_options` gives us control over backtracking
-    let mut pos = 0;
-    while pos <= text.len() {
-        match re.search_with_options(
-            text,
-            pos,
-            text.len(),
-            onig::SearchOptions::SEARCH_OPTION_NONE,
-            Some(&mut region),
-        ) {
-            Some(_) => {
-                let g1 = region.pos(1).map(|(s, e)| &text[s..e]);
-                let g2 = region.pos(2).map(|(s, e)| &text[s..e]);
-                results.push((g1, g2));
+    // this is what a matching default group would look like
+    let group_string = "#".repeat(grp_size);
 
-                // Advance one step to force exploration of alternative paths
-                pos += 1;
-            }
-            None => break,
-        }
+    // prepare a substring of the first grp_size characters where it is assumed
+    // that '?' means defect spring (otherwise it would not match)
+    let assume_defect = input
+        .chars()
+        .take(grp_size)
+        .map(|c| if c == '?' { '#' } else { c })
+        .collect::<String>();
+
+    // If the string with assumed defect does not match the group string, it's
+    // not a match
+    if assume_defect != group_string {
+        return false;
     }
 
-    println!("All possibilities:");
-    for r in results {
-        println!("{:?}", r);
+    // if the following character is also a '#', it's not a match
+    // (the group would have needed to be longer)
+    if input.len() > grp_size && input.chars().nth(grp_size) == Some('#') {
+        return false;
+    } else {
+        // This was the end of the string or the following char is . or ?
+        return true;
     }
-    42
 }
 
 #[test]
-fn test_count_matches() {
-    let str1 = "?.###";
-    assert_eq!(count_matches(str1, &Vec::from([3]), 0), 1);
-
-    let str1 = "???.###";
-    assert_eq!(count_matches(str1, &Vec::from([1]), 0), 0); // The ### are not matched
-    assert_eq!(count_matches(str1, &Vec::from([1, 3]), 0), 3);
-
-    let str2 = "";
-    assert_eq!(count_matches(str2, &Vec::from([1]), 0), 0);
-
-    let str3 = "???.##";
-    assert_eq!(count_matches(str3, &Vec::from([1, 3]), 0), 0);
-
-    let str4a = ".??..??...?##.";
-    assert_eq!(count_matches(str4a, &Vec::from([1, 1, 3]), 0), 4);
-
-    let str4 = "????.######..#####.";
-    assert_eq!(count_matches(str4, &Vec::from([1, 6, 5]), 0), 4);
-
-    let str5a = "???????";
-    assert_eq!(count_matches(str5a, &Vec::from([2, 1]), 0), 10);
-
-    let str5b = "?###???";
-    assert_eq!(count_matches(str5b, &Vec::from([3, 1]), 0), 2);
-
-    let str5c = "?####????????";
-    assert_eq!(count_matches(str5c, &Vec::from([4, 2, 1]), 0), 10);
-
-    let str5e = "###????????";
-    assert_eq!(count_matches(str5e, &Vec::from([3]), 0), 1);
-
-    let str5d = "###????????";
-    assert_eq!(count_matches(str5d, &Vec::from([3, 2, 1]), 0), 10);
-
-    let str5 = "?###????????";
-    assert_eq!(count_matches(str5, &Vec::from([3, 2, 1]), 0), 10);
+fn test_is_group_matching() {
+    assert_eq!(is_group_matching(&".#.".to_string(), 2), false);
+    assert_eq!(is_group_matching(&"?#.".to_string(), 2), true);
+    assert_eq!(is_group_matching(&"##.".to_string(), 2), true);
+    assert_eq!(is_group_matching(&"###".to_string(), 2), false);
+    assert_eq!(is_group_matching(&"##".to_string(), 2), true);
 }

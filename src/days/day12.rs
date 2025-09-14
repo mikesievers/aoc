@@ -126,3 +126,45 @@ fn test_count_matches() {
     let str1 = "???.###";
     assert_eq!(count_matches(str1, &Vec::from([1, 3])), 3);
 }
+
+fn is_group_matching(input: &String, grp_size: usize) -> bool {
+    // A string that is too short can't match
+    if input.len() < grp_size {
+        return false;
+    };
+
+    // this is what a matching default group would look like
+    let group_string = "#".repeat(grp_size);
+
+    // prepare a substring of the first grp_size characters where it is assumed
+    // that '?' means defect spring (otherwise it would not match)
+    let assume_defect = input
+        .chars()
+        .take(grp_size)
+        .map(|c| if c == '?' { '#' } else { c })
+        .collect::<String>();
+
+    // If the string with assumed defect does not match the group string, it's
+    // not a match
+    if assume_defect != group_string {
+        return false;
+    }
+
+    // if the following character is also a '#', it's not a match
+    // (the group would have needed to be longer)
+    if input.len() > grp_size && input.chars().nth(grp_size) == Some('#') {
+        return false;
+    } else {
+        // This was the end of the string or the following char is . or ?
+        return true;
+    }
+}
+
+#[test]
+fn test_is_group_matching() {
+    assert_eq!(is_group_matching(&".#.".to_string(), 2), false);
+    assert_eq!(is_group_matching(&"?#.".to_string(), 2), true);
+    assert_eq!(is_group_matching(&"##.".to_string(), 2), true);
+    assert_eq!(is_group_matching(&"###".to_string(), 2), false);
+    assert_eq!(is_group_matching(&"##".to_string(), 2), true);
+}

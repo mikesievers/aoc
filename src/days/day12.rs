@@ -50,7 +50,12 @@ impl Ledger {
     pub fn sum_match_counts(&self) -> usize {
         self.records
             .iter()
-            .map(|record| count_matches(record.chars.as_str(), &record.groups))
+            .map(
+                |record| match count_matches(record.chars.as_str(), &record.groups) {
+                    Some(n) => n,
+                    None => 0,
+                },
+            )
             .sum()
     }
 }
@@ -92,25 +97,26 @@ fn test_get_groups() {
     assert_eq!(grps, Vec::<usize>::from([2, 1, 3, 1]));
 }
 
-fn count_matches(line: &str, groups: &Vec<usize>) -> usize {
+fn count_matches(line: &str, groups: &Vec<usize>) -> Option<usize> {
     // When all groups have been consume, count as a match
     // And allow recursion to wrap up
     if groups.len() == 0 {
-        return 1;
+        return Some(1);
     }
 
     // If the remaining string is smaller than the group size, it can't be a match
     let grp_size = groups[0];
-    if groups.len() < grp_size {
-        return 0;
+    if line.len() < grp_size {
+        return Some(0);
     }
 
     let mut count = 0;
+    let mut in_group = false; // Track whether we are in a group or not
 
     for skips in 0..=(line.len() - grp_size) {
         let sub_line = line.chars().skip(skips).collect::<String>();
         match is_group_matching(&sub_line, grp_size) {
-            None => return 0, // the group ha not matched, but needed to
+            None if count == 0 => return Some(0), // the group has never matched, but needed to
             Some(true) => {
                 // it's a match. Determine the rest of the string and count matches against the remaining possibilities.
                 let remaining_groups = groups
@@ -122,35 +128,52 @@ fn count_matches(line: &str, groups: &Vec<usize>) -> usize {
                 match remaining_string {
                     None => {
                         // When nothing is left, count as overall match and return. Otherwise, no match.
-                        if remaining_groups.len() > 0 {
-                            return 0;
+                        if remaining_groups.len() > 0 && count == 0 {
+                            return None; // TODO: Should this be None instead, because no remaining string?
                         } else {
-                            return 1;
+                            match in_group {
+                                false => {
+                                    return Some(count + 1);
+                                }
+                                true => {
+                                    return Some(count);
+                                }
+                            }
                         }
                     }
-                    Some(sub_line) => {
-                        count += count_matches(&sub_line, &remaining_groups);
+                    Some(remains) => {
+                        count += count_matches(&remains, &remaining_groups)?;
                     }
                 }
             }
             Some(false) => {}
+            _ => {}
         }
+        // finally, track whether we are in a group by remembering if the current spring was broken
+        if sub_line.chars().nth(0) == Some('#') {
+            in_group = true
+        } else {
+            in_group = false
+        };
     }
 
-    count
+    Some(count)
 }
 
 #[test]
 fn test_count_matches() {
+    let str1 = "?.###";
+    assert_eq!(count_matches(str1, &Vec::from([3])), Some(1));
+
     let str1 = "???.###";
-    assert_eq!(count_matches(str1, &Vec::from([1])), 0); // The three # are not matched
-    assert_eq!(count_matches(str1, &Vec::from([1, 3])), 3);
+    assert_eq!(count_matches(str1, &Vec::from([1])), None); // The three # are not matched
+    assert_eq!(count_matches(str1, &Vec::from([1, 3])), Some(3));
 
     let str2 = "";
-    assert_eq!(count_matches(str2, &Vec::from([1])), 0);
+    assert_eq!(count_matches(str2, &Vec::from([1])), Some(0));
 
     let str3 = "???.##";
-    assert_eq!(count_matches(str3, &Vec::from([1, 3])), 0);
+    assert_eq!(count_matches(str3, &Vec::from([1, 3])), Some(0));
 }
 
 // Check whether the string at the current position matches the current group

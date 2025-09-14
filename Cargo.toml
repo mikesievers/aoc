@@ -6,5 +6,6 @@ edition = "2024"
 [dependencies]
 itertools = "0.14.0"
 nom = "8"
+onig = "6.5.1"
 petgraph = "0.8.2"
 rstest = "0.26.1"

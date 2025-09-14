@@ -14,6 +14,12 @@ use std::fs::read_to_string;
 //   - For each matching position, find the matching positions of the remaining subgroups
 //   - For the last subgroup, return a match if possible, otherwise the number of matching positions
 
+// This is a recursive counting of matches:
+// - Consider the whole string, does position 0 fit the first group?
+//   - If yes, count all the possibilities in which the following groups match the rest of the string.
+//   - If not all groups match, don't count as a match
+//   - => need to track the number of matching groups and the number of groups matching overall
+
 #[derive(Debug)]
 pub struct Ledger {
     data: String,
@@ -51,8 +57,8 @@ impl Ledger {
         self.records
             .iter()
             .map(
-                |record| match count_matches(record.chars.as_str(), &record.groups) {
-                    Some(n) => n,
+                |record| match count_matches(record.chars.as_str(), &record.groups, 0) {
+                    Some((n, _)) => n,
                     None => 0,
                 },
             )
@@ -97,26 +103,35 @@ fn test_get_groups() {
     assert_eq!(grps, Vec::<usize>::from([2, 1, 3, 1]));
 }
 
-fn count_matches(line: &str, groups: &Vec<usize>) -> Option<usize> {
-    // When all groups have been consume, count as a match
+fn count_matches(line: &str, groups: &Vec<usize>, groups_matched: usize) -> Option<(usize, usize)> {
+    // "groups_matched tracks how many groups have been matched".
+    // Results should only be reported as >0 if all groups have been matched.
+
+    // When all groups have been consumed, count as a match
     // And allow recursion to wrap up
     if groups.len() == 0 {
-        return Some(1);
+        return Some((0, groups_matched + 1));
     }
 
     // If the remaining string is smaller than the group size, it can't be a match
     let grp_size = groups[0];
     if line.len() < grp_size {
-        return Some(0);
+        return Some((0, groups_matched));
     }
 
     let mut count = 0;
+    let mut all_groups_matched = 0;
     let mut in_group = false; // Track whether we are in a group or not
 
     for skips in 0..=(line.len() - grp_size) {
         let sub_line = line.chars().skip(skips).collect::<String>();
+        if in_group && sub_line.chars().nth(0).unwrap() == '#' {
+            continue;
+        } else {
+            in_group = false;
+        }
         match is_group_matching(&sub_line, grp_size) {
-            None if count == 0 => return Some(0), // the group has never matched, but needed to
+            None if count == 0 => return Some((0, groups_matched)), // the group has never matched, but needed to
             Some(true) => {
                 // it's a match. Determine the rest of the string and count matches against the remaining possibilities.
                 let remaining_groups = groups
@@ -129,20 +144,23 @@ fn count_matches(line: &str, groups: &Vec<usize>) -> Option<usize> {
                     None => {
                         // When nothing is left, count as overall match and return. Otherwise, no match.
                         if remaining_groups.len() > 0 && count == 0 {
-                            return None; // TODO: Should this be None instead, because no remaining string?
+                            return None;
                         } else {
                             match in_group {
                                 false => {
-                                    return Some(count + 1);
+                                    return Some((count + 1, groups_matched + 1));
                                 }
                                 true => {
-                                    return Some(count);
+                                    return Some((count, groups_matched + 1));
                                 }
                             }
                         }
                     }
                     Some(remains) => {
-                        count += count_matches(&remains, &remaining_groups)?;
+                        let mut matches = 0;
+                        (matches, all_groups_matched) =
+                            count_matches(&remains, &remaining_groups, groups_matched)?;
+                        count += matches;
                     }
                 }
             }
@@ -152,28 +170,37 @@ fn count_matches(line: &str, groups: &Vec<usize>) -> Option<usize> {
         // finally, track whether we are in a group by remembering if the current spring was broken
         if sub_line.chars().nth(0) == Some('#') {
             in_group = true
-        } else {
-            in_group = false
-        };
+        }
     }
 
-    Some(count)
+    match all_groups_matched {
+        n => {
+            if n == groups.len() {
+                return Some((count, all_groups_matched));
+            } else {
+                return Some((0, all_groups_matched));
+            }
+        }
+    }
 }
 
 #[test]
 fn test_count_matches() {
     let str1 = "?.###";
-    assert_eq!(count_matches(str1, &Vec::from([3])), Some(1));
+    assert_eq!(count_matches(str1, &Vec::from([3]), 0), Some((1, 1)));
 
     let str1 = "???.###";
-    assert_eq!(count_matches(str1, &Vec::from([1])), None); // The three # are not matched
-    assert_eq!(count_matches(str1, &Vec::from([1, 3])), Some(3));
+    assert_eq!(count_matches(str1, &Vec::from([1]), 0), None); // The three # are not matched
+    assert_eq!(count_matches(str1, &Vec::from([1, 3]), 0), Some((3, 3)));
 
     let str2 = "";
-    assert_eq!(count_matches(str2, &Vec::from([1])), Some(0));
+    assert_eq!(count_matches(str2, &Vec::from([1]), 0), Some((0, 0)));
 
     let str3 = "???.##";
-    assert_eq!(count_matches(str3, &Vec::from([1, 3])), Some(0));
+    assert_eq!(count_matches(str3, &Vec::from([1, 3]), 0), Some((0, 1)));
+
+    let str3 = "?###????????";
+    assert_eq!(count_matches(str3, &Vec::from([3, 2, 1]), 0), Some((0, 10)));
 }
 
 // Check whether the string at the current position matches the current group

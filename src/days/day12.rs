@@ -109,8 +109,31 @@ fn count_matches(line: &str, groups: &Vec<usize>) -> usize {
 
     for skips in 0..=(line.len() - grp_size) {
         let sub_line = line.chars().skip(skips).collect::<String>();
-        if is_group_matching(&sub_line, grp_size).unwrap() {
-            count += 1;
+        match is_group_matching(&sub_line, grp_size) {
+            None => return 0, // the group ha not matched, but needed to
+            Some(true) => {
+                // it's a match. Determine the rest of the string and count matches against the remaining possibilities.
+                let remaining_groups = groups
+                    .iter()
+                    .skip(1)
+                    .map(|g| g.clone())
+                    .collect::<Vec<usize>>();
+                let remaining_string = get_rest(&sub_line, grp_size);
+                match remaining_string {
+                    None => {
+                        // When nothing is left, count as overall match and return. Otherwise, no match.
+                        if remaining_groups.len() > 0 {
+                            return 0;
+                        } else {
+                            return 1;
+                        }
+                    }
+                    Some(sub_line) => {
+                        count += count_matches(&sub_line, &remaining_groups);
+                    }
+                }
+            }
+            Some(false) => {}
         }
     }
 
@@ -120,7 +143,7 @@ fn count_matches(line: &str, groups: &Vec<usize>) -> usize {
 #[test]
 fn test_count_matches() {
     let str1 = "???.###";
-    assert_eq!(count_matches(str1, &Vec::from([1])), 3);
+    assert_eq!(count_matches(str1, &Vec::from([1])), 0); // The three # are not matched
     assert_eq!(count_matches(str1, &Vec::from([1, 3])), 3);
 
     let str2 = "";
@@ -140,8 +163,8 @@ fn is_group_matching(input: &String, grp_size: usize) -> Option<bool> {
     // this is what a matching default group would look like
     let group_string = "#".repeat(grp_size);
 
-    // If any spring it marked as defect, it must be accounted for by a match
-    let must_match = input.chars().take(grp_size).any(|c| c == '#');
+    // If the first character is marked as defect, it must be accounted for by a match
+    let must_match = input.chars().nth(0).unwrap() == '#';
 
     // prepare a substring of the first grp_size characters where it is assumed
     // that '?' means defect spring (otherwise it would not match)
@@ -164,7 +187,12 @@ fn is_group_matching(input: &String, grp_size: usize) -> Option<bool> {
     // (the group would have needed to be longer)
     // Also, since all defects must be matched, this can't be counted
     if input.len() > grp_size && input.chars().nth(grp_size) == Some('#') {
-        return None;
+        // If the current character is not a defect spring '#', it's not a match but that's OK
+        if input.chars().nth(0) != Some('#') {
+            return Some(false);
+        } else {
+            return None;
+        }
     } else {
         // This was the end of the string or the following char is . or ?
         return Some(true);
@@ -173,13 +201,19 @@ fn is_group_matching(input: &String, grp_size: usize) -> Option<bool> {
 
 #[test]
 fn test_is_group_matching() {
-    assert_eq!(is_group_matching(&"".to_string(), 2), Some(false));
-    assert_eq!(is_group_matching(&".#.".to_string(), 2), None);
-    assert_eq!(is_group_matching(&"?#.".to_string(), 2), Some(true));
-    assert_eq!(is_group_matching(&"##.".to_string(), 2), Some(true));
-    assert_eq!(is_group_matching(&"##.".to_string(), 1), None);
-    assert_eq!(is_group_matching(&"###".to_string(), 2), None);
-    assert_eq!(is_group_matching(&"##".to_string(), 2), Some(true));
+    assert_eq!(is_group_matching(&"".to_string(), 2), Some(false)); // empty string does not match
+
+    assert_eq!(is_group_matching(&".#.".to_string(), 2), Some(false)); // Does not match, but could next time
+    assert_eq!(is_group_matching(&"#.".to_string(), 2), None); // ... not it must match!
+
+    assert_eq!(is_group_matching(&"?#.".to_string(), 2), Some(true)); // wildcard allows matching
+    assert_eq!(is_group_matching(&"##.".to_string(), 2), Some(true)); // Trivial case
+    assert_eq!(is_group_matching(&"##.".to_string(), 1), None); // must match! (match group too small)
+    assert_eq!(is_group_matching(&"###".to_string(), 2), None); // must match! (match group too small)
+    assert_eq!(is_group_matching(&"##".to_string(), 2), Some(true)); // end of string
+
+    assert_eq!(is_group_matching(&".###".to_string(), 3), Some(false)); // does not have to match (but would next iteration)
+    assert_eq!(is_group_matching(&"?###".to_string(), 3), Some(false)); // does not have to match (but would next iteration)
 }
 
 fn get_rest(input: &String, grp_size: usize) -> Option<String> {

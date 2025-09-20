@@ -50,7 +50,7 @@ impl Ledger {
     pub fn sum_match_counts(&self) -> usize {
         self.records
             .iter()
-            .map(|record| count_matches_brute_force(record.chars.as_str(), &record.groups))
+            .map(|record| count_matches(record.chars.as_str(), &record.groups).unwrap_or(0))
             .sum()
     }
 }

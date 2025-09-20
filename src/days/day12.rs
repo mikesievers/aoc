@@ -194,7 +194,7 @@ fn count_matches(input: &str, groups: &Vec<usize>) -> Option<usize> {
                         matches += 1;
                     }
                     _ => {
-                        return None;
+                        return Some(matches);
                     }
                 },
                 1.. => {
@@ -216,44 +216,44 @@ fn count_matches(input: &str, groups: &Vec<usize>) -> Option<usize> {
 
 #[test]
 fn test_count_matches() {
-    // assert_eq!(count_matches("#", &Vec::from([1])), Some(1));
-    // assert_eq!(count_matches("?", &Vec::from([1])), Some(1));
-    // assert_eq!(count_matches(".", &Vec::from([1])), Some(0));
-    // assert_eq!(count_matches("....", &Vec::from([1])), Some(0));
-    // assert_eq!(count_matches(".?..", &Vec::from([1])), Some(1));
-    // assert_eq!(count_matches("#.#", &Vec::from([1])), Some(0));
-    // assert_eq!(count_matches(".#.#", &Vec::from([1])), Some(0));
-    // assert_eq!(count_matches(".#.#.", &Vec::from([1])), Some(0));
-    // assert_eq!(count_matches(".?.?.", &Vec::from([1])), Some(2));
-    // assert_eq!(count_matches(".?.?", &Vec::from([1])), Some(2));
-    // assert_eq!(count_matches(".#.....", &Vec::from([1])), Some(1));
-    // assert_eq!(count_matches(".....#.", &Vec::from([1])), Some(1));
-    // assert_eq!(count_matches("......#", &Vec::from([1])), Some(1));
-    // assert_eq!(count_matches("??.?..#", &Vec::from([1])), Some(1));
+    assert_eq!(count_matches("#", &Vec::from([1])), Some(1));
+    assert_eq!(count_matches("?", &Vec::from([1])), Some(1));
+    assert_eq!(count_matches(".", &Vec::from([1])), Some(0));
+    assert_eq!(count_matches("....", &Vec::from([1])), Some(0));
+    assert_eq!(count_matches(".?..", &Vec::from([1])), Some(1));
+    assert_eq!(count_matches("#.#", &Vec::from([1])), Some(0));
+    assert_eq!(count_matches(".#.#", &Vec::from([1])), Some(0));
+    assert_eq!(count_matches(".#.#.", &Vec::from([1])), Some(0));
+    assert_eq!(count_matches(".?.?.", &Vec::from([1])), Some(2));
+    assert_eq!(count_matches(".?.?", &Vec::from([1])), Some(2));
+    assert_eq!(count_matches(".#.....", &Vec::from([1])), Some(1));
+    assert_eq!(count_matches(".....#.", &Vec::from([1])), Some(1));
+    assert_eq!(count_matches("......#", &Vec::from([1])), Some(1));
+    assert_eq!(count_matches("??.?..#", &Vec::from([1])), Some(1));
 
-    // assert_eq!(count_matches("....###", &Vec::from([1, 3])), Some(0));
-    // assert_eq!(count_matches("??.###", &Vec::from([1, 3])), Some(2));
-    // assert_eq!(count_matches(".??.###", &Vec::from([1, 3])), Some(2));
-    // assert_eq!(count_matches("???.###", &Vec::from([1, 3])), Some(3));
+    assert_eq!(count_matches("....###", &Vec::from([1, 3])), Some(0));
+    assert_eq!(count_matches("??.###", &Vec::from([1, 3])), Some(2));
+    assert_eq!(count_matches(".??.###", &Vec::from([1, 3])), Some(2));
+    assert_eq!(count_matches("???.###", &Vec::from([1, 3])), Some(3));
 
-    // // Sample input data
-    // assert_eq!(count_matches("???.###", &Vec::from([1, 1, 3])), Some(1));
-    // assert_eq!(
-    //     count_matches(".??..??...?##.", &Vec::from([1, 1, 3])),
-    //     Some(4)
-    // );
-    // assert_eq!(
-    //     count_matches("?#?#?#?#?#?#?#?", &Vec::from([1, 3, 1, 6])),
-    //     Some(1)
-    // );
-    // assert_eq!(
-    //     count_matches("????.#...#...", &Vec::from([4, 1, 1])),
-    //     Some(1)
-    // );
-    // assert_eq!(
-    //     count_matches("????.######..#####.", &Vec::from([1, 6, 5])),
-    //     Some(4)
-    // );
+    // Sample input data
+    assert_eq!(count_matches("???.###", &Vec::from([1, 1, 3])), Some(1));
+    assert_eq!(
+        count_matches(".??..??...?##.", &Vec::from([1, 1, 3])),
+        Some(4)
+    );
+    assert_eq!(
+        count_matches("?#?#?#?#?#?#?#?", &Vec::from([1, 3, 1, 6])),
+        Some(1)
+    );
+    assert_eq!(
+        count_matches("????.#...#...", &Vec::from([4, 1, 1])),
+        Some(1)
+    );
+    assert_eq!(
+        count_matches("????.######..#####.", &Vec::from([1, 6, 5])),
+        Some(4)
+    );
     assert_eq!(count_matches("###?????", &Vec::from([3, 2, 1])), Some(1));
     assert_eq!(
         count_matches("?###????????", &Vec::from([3, 2, 1])),

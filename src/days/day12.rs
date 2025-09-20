@@ -1,6 +1,6 @@
-use itertools::Itertools;
+use itertools::{Itertools, unfold};
 use nom::multi::count;
-use std::{fs::read_to_string, ops::Index};
+use std::{fs::read_to_string, iter::repeat, ops::Index};
 
 // Springs:
 // . : operational
@@ -53,15 +53,53 @@ impl Ledger {
             .map(|record| count_matches(record.chars.as_str(), &record.groups).unwrap_or(0))
             .sum()
     }
+
+    pub fn sum_match_counts_unfolded(&self) -> usize {
+        let mut i = 0;
+        self.records
+            .iter()
+            .map(|record| {
+                i += 1;
+                println!("{i}");
+                count_matches(
+                    &unfold_records(&record.chars).as_str(),
+                    &unfold_groups(&record.groups),
+                )
+                .unwrap_or(0)
+            })
+            .sum()
+    }
 }
 
 #[test]
-fn test_records() {
+fn test_ledger() {
     let ledger = Ledger::from_file("resources/day12_sample.txt");
 
     println!("records:\n{}", ledger.data);
     println!("Ledger:\n{:?}", ledger);
     assert_eq!(ledger.sum_match_counts(), 21);
+    assert_eq!(ledger.sum_match_counts_unfolded(), 525152);
+}
+
+pub fn unfold_records(input: &String) -> String {
+    repeat(input).take(5).join("?").to_string()
+}
+
+#[test]
+fn test_unfold() {
+    assert_eq!(unfold_records(&".#".to_string()), ".#?.#?.#?.#?.#");
+}
+
+pub fn unfold_groups(grp: &Vec<usize>) -> Vec<usize> {
+    repeat(grp).take(5).cloned().flatten().collect()
+}
+
+#[test]
+fn test_unfold_groups() {
+    assert_eq!(
+        unfold_groups(&vec![1_usize, 2_usize]),
+        vec![1, 2, 1, 2, 1, 2, 1, 2, 1, 2]
+    )
 }
 
 fn count_matches_brute_force(line: &str, groups: &Vec<usize>) -> usize {
@@ -258,6 +296,29 @@ fn test_count_matches() {
     assert_eq!(
         count_matches("?###????????", &Vec::from([3, 2, 1])),
         Some(10)
+    );
+
+    // unfolded data
+    assert_eq!(count_matches("???.###", &Vec::from([1, 1, 3])), Some(1));
+    assert_eq!(
+        count_matches(".??..??...?##.", &Vec::from([1, 1, 3])),
+        Some(16384)
+    );
+    assert_eq!(
+        count_matches("?#?#?#?#?#?#?#?", &Vec::from([1, 3, 1, 6])),
+        Some(1)
+    );
+    assert_eq!(
+        count_matches("????.#...#...", &Vec::from([4, 1, 1])),
+        Some(16)
+    );
+    assert_eq!(
+        count_matches("????.######..#####.", &Vec::from([1, 6, 5])),
+        Some(2500)
+    );
+    assert_eq!(
+        count_matches("?###????????", &Vec::from([3, 2, 1])),
+        Some(506250)
     );
 }
 

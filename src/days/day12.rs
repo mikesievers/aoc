@@ -50,7 +50,7 @@ impl Ledger {
     pub fn sum_match_counts(&self) -> usize {
         self.records
             .iter()
-            .map(|record| count_matches(record.chars.as_str(), &record.groups))
+            .map(|record| count_matches_brute_force(record.chars.as_str(), &record.groups))
             .sum()
     }
 }
@@ -64,7 +64,7 @@ fn test_records() {
     assert_eq!(ledger.sum_match_counts(), 21);
 }
 
-fn count_matches(line: &str, groups: &Vec<usize>) -> usize {
+fn count_matches_brute_force(line: &str, groups: &Vec<usize>) -> usize {
     let mut count = 0;
     let mut chars: Vec<char> = line.chars().collect();
     let jokers: Vec<usize> = chars
@@ -124,7 +124,7 @@ fn test_get_groups() {
 #[test]
 fn test_count_matches() {
     let str1 = "???.###";
-    assert_eq!(count_matches(str1, &Vec::from([1, 3])), 3);
+    assert_eq!(count_matches_brute_force(str1, &Vec::from([1, 3])), 3);
 }
 
 fn is_group_matching(input: &String, grp_size: usize) -> bool {
@@ -165,6 +165,7 @@ fn test_is_group_matching() {
     assert_eq!(is_group_matching(&".#.".to_string(), 2), false);
     assert_eq!(is_group_matching(&"?#.".to_string(), 2), true);
     assert_eq!(is_group_matching(&"##.".to_string(), 2), true);
+    assert_eq!(is_group_matching(&"##?".to_string(), 2), true);
     assert_eq!(is_group_matching(&"###".to_string(), 2), false);
     assert_eq!(is_group_matching(&"##".to_string(), 2), true);
 }

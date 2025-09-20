@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 itertools = "0.14.0"
+memoize = "0.5.1"
 nom = "8"
 petgraph = "0.8.2"
 rayon = "1.11.0"

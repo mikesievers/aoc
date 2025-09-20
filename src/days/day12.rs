@@ -1,6 +1,7 @@
 use itertools::{Itertools, unfold};
 use nom::multi::count;
 use std::{fs::read_to_string, iter::repeat, ops::Index};
+use memoize::memoize;
 
 // Springs:
 // . : operational
@@ -50,7 +51,7 @@ impl Ledger {
     pub fn sum_match_counts(&self) -> usize {
         self.records
             .iter()
-            .map(|record| count_matches(record.chars.as_str(), &record.groups).unwrap_or(0))
+            .map(|record| count_matches(record.chars.as_str().to_string(), record.groups.clone()).unwrap_or(0))
             .sum()
     }
 
@@ -62,8 +63,8 @@ impl Ledger {
                 i += 1;
                 println!("{i}");
                 count_matches(
-                    &unfold_records(&record.chars).as_str(),
-                    &unfold_groups(&record.groups),
+                    unfold_records(&record.chars).as_str().to_string(),
+                    unfold_groups(&record.groups),
                 )
                 .unwrap_or(0)
             })
@@ -165,7 +166,8 @@ fn test_get_groups() {
     assert_eq!(grps, Vec::<usize>::from([2, 1, 3, 1]));
 }
 
-fn count_matches(input: &str, groups: &Vec<usize>) -> Option<usize> {
+#[memoize]
+fn count_matches(input: String, groups: Vec<usize>) -> Option<usize> {
     // If all groups have been used up, this is a valid combination
     if groups.len() == 0 {
         match input.find("#") {
@@ -238,7 +240,7 @@ fn count_matches(input: &str, groups: &Vec<usize>) -> Option<usize> {
                 1.. => {
                     let rest_str = &cinput[(1 + grp_size)..];
                     let rest_grps = groups.iter().skip(1).cloned().collect::<Vec<usize>>();
-                    if let Some(restmatches) = count_matches(rest_str, &rest_grps) {
+                    if let Some(restmatches) = count_matches(rest_str.to_string(), rest_grps) {
                         matches += restmatches;
                     } else {
                         //return None;
@@ -254,47 +256,47 @@ fn count_matches(input: &str, groups: &Vec<usize>) -> Option<usize> {
 
 #[test]
 fn test_count_matches() {
-    assert_eq!(count_matches("#", &Vec::from([1])), Some(1));
-    assert_eq!(count_matches("?", &Vec::from([1])), Some(1));
-    assert_eq!(count_matches(".", &Vec::from([1])), Some(0));
-    assert_eq!(count_matches("....", &Vec::from([1])), Some(0));
-    assert_eq!(count_matches(".?..", &Vec::from([1])), Some(1));
-    assert_eq!(count_matches("#.#", &Vec::from([1])), Some(0));
-    assert_eq!(count_matches(".#.#", &Vec::from([1])), Some(0));
-    assert_eq!(count_matches(".#.#.", &Vec::from([1])), Some(0));
-    assert_eq!(count_matches(".?.?.", &Vec::from([1])), Some(2));
-    assert_eq!(count_matches(".?.?", &Vec::from([1])), Some(2));
-    assert_eq!(count_matches(".#.....", &Vec::from([1])), Some(1));
-    assert_eq!(count_matches(".....#.", &Vec::from([1])), Some(1));
-    assert_eq!(count_matches("......#", &Vec::from([1])), Some(1));
-    assert_eq!(count_matches("??.?..#", &Vec::from([1])), Some(1));
+    assert_eq!(count_matches("#".to_string(), Vec::from([1])), Some(1));
+    assert_eq!(count_matches("?".to_string(), Vec::from([1])), Some(1));
+    assert_eq!(count_matches(".".to_string(), Vec::from([1])), Some(0));
+    assert_eq!(count_matches("....".to_string(), Vec::from([1])), Some(0));
+    assert_eq!(count_matches(".?..".to_string(), Vec::from([1])), Some(1));
+    assert_eq!(count_matches("#.#".to_string(), Vec::from([1])), Some(0));
+    assert_eq!(count_matches(".#.#".to_string(), Vec::from([1])), Some(0));
+    assert_eq!(count_matches(".#.#.".to_string(), Vec::from([1])), Some(0));
+    assert_eq!(count_matches(".?.?.".to_string(), Vec::from([1])), Some(2));
+    assert_eq!(count_matches(".?.?".to_string(), Vec::from([1])), Some(2));
+    assert_eq!(count_matches(".#.....".to_string(), Vec::from([1])), Some(1));
+    assert_eq!(count_matches(".....#.".to_string(), Vec::from([1])), Some(1));
+    assert_eq!(count_matches("......#".to_string(), Vec::from([1])), Some(1));
+    assert_eq!(count_matches("??.?..#".to_string(), Vec::from([1])), Some(1));
 
-    assert_eq!(count_matches("....###", &Vec::from([1, 3])), Some(0));
-    assert_eq!(count_matches("??.###", &Vec::from([1, 3])), Some(2));
-    assert_eq!(count_matches(".??.###", &Vec::from([1, 3])), Some(2));
-    assert_eq!(count_matches("???.###", &Vec::from([1, 3])), Some(3));
+    assert_eq!(count_matches("....###".to_string(), Vec::from([1, 3])), Some(0));
+    assert_eq!(count_matches("??.###".to_string(), Vec::from([1, 3])), Some(2));
+    assert_eq!(count_matches(".??.###".to_string(), Vec::from([1, 3])), Some(2));
+    assert_eq!(count_matches("???.###".to_string(), Vec::from([1, 3])), Some(3));
 
     // Sample input data
-    assert_eq!(count_matches("???.###", &Vec::from([1, 1, 3])), Some(1));
+    assert_eq!(count_matches("???.###".to_string(), Vec::from([1, 1, 3])), Some(1));
     assert_eq!(
-        count_matches(".??..??...?##.", &Vec::from([1, 1, 3])),
+        count_matches(".??..??...?##.".to_string(), Vec::from([1, 1, 3])),
         Some(4)
     );
     assert_eq!(
-        count_matches("?#?#?#?#?#?#?#?", &Vec::from([1, 3, 1, 6])),
+        count_matches("?#?#?#?#?#?#?#?".to_string(), Vec::from([1, 3, 1, 6])),
         Some(1)
     );
     assert_eq!(
-        count_matches("????.#...#...", &Vec::from([4, 1, 1])),
+        count_matches("????.#...#...".to_string(), Vec::from([4, 1, 1])),
         Some(1)
     );
     assert_eq!(
-        count_matches("????.######..#####.", &Vec::from([1, 6, 5])),
+        count_matches("????.######..#####.".to_string(), Vec::from([1, 6, 5])),
         Some(4)
     );
-    assert_eq!(count_matches("###?????", &Vec::from([3, 2, 1])), Some(1));
+    assert_eq!(count_matches("###?????".to_string(), Vec::from([3, 2, 1])), Some(1));
     assert_eq!(
-        count_matches("?###????????", &Vec::from([3, 2, 1])),
+        count_matches("?###????????".to_string(), Vec::from([3, 2, 1])),
         Some(10)
     );
 }

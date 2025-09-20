@@ -102,6 +102,6 @@ fn main() {
     // Part1: 7857
     let records = day12::Ledger::from_file("resources/day12_input.txt");
     println!("Day 12 part 01: {}", records.sum_match_counts());
-    // Part2: 
+    // Part2: 28606137449920
     println!("Day 12 part 02: {}", records.sum_match_counts_unfolded());
 }

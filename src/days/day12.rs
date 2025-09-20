@@ -93,6 +93,12 @@ fn count_matches_brute_force(line: &str, groups: &Vec<usize>) -> usize {
     count
 }
 
+#[test]
+fn test_count_matches_brute_force() {
+    let str1 = "???.###";
+    assert_eq!(count_matches_brute_force(str1, &Vec::from([1, 3])), 3);
+}
+
 fn get_groups(chars: &Vec<char>) -> Vec<usize> {
     let mut groups = Vec::new();
 
@@ -121,10 +127,68 @@ fn test_get_groups() {
     assert_eq!(grps, Vec::<usize>::from([2, 1, 3, 1]));
 }
 
+fn count_matches(input: &str, groups: &Vec<usize>) -> Option<usize> {
+    // If all groups have been used up, this is a valid combination
+    if groups.len() == 0 {
+        return Some(1);
+    };
+
+    // The first group is the current group
+    let grp_size = groups[0];
+
+    let mut matches = 0;
+
+    // If there are not enough characters left for the current group, it can't
+    // be a match
+    for cindex in 0..=(input.len() - grp_size) {
+        let cinput = &input[cindex..];
+        if cinput.len() < grp_size {
+            return None;
+        }
+
+        if is_group_matching(&input.to_string(), grp_size) {
+            // Determine remaining string, call with remaining groups
+            match cinput.len() as i64 - (cindex as i64 + grp_size as i64) {
+                ..=0 => match groups.len() {
+                    1 => {
+                        return Some(1);
+                    }
+                    _ => {
+                        return None;
+                    }
+                },
+                1.. => {
+                    let rest_str = &cinput[(cindex + 2)..];
+                    let rest_grps = groups.iter().skip(1).map(|&g| g).collect::<Vec<usize>>();
+                    if let Some(restmatches) = count_matches(rest_str, &rest_grps) {
+                        matches += restmatches;
+                    } else {
+                        return None;
+                    }
+                }
+            }
+        }
+    }
+
+    Some(matches)
+}
+
 #[test]
 fn test_count_matches() {
-    let str1 = "???.###";
-    assert_eq!(count_matches_brute_force(str1, &Vec::from([1, 3])), 3);
+    assert_eq!(count_matches("#", &Vec::from([1])), Some(1));
+    assert_eq!(count_matches("?", &Vec::from([1])), Some(1));
+    assert_eq!(count_matches(".", &Vec::from([1])), None);
+    assert_eq!(count_matches("....", &Vec::from([1])), None);
+    assert_eq!(count_matches("....?..", &Vec::from([1])), Some(1));
+    assert_eq!(count_matches(".?..?..", &Vec::from([1])), Some(2));
+    assert_eq!(count_matches(".#.....", &Vec::from([1])), Some(1));
+    assert_eq!(count_matches(".....#.", &Vec::from([1])), Some(1));
+    assert_eq!(count_matches("......#", &Vec::from([1])), Some(1));
+    assert_eq!(count_matches("??.?..#", &Vec::from([1])), Some(4));
+
+    assert_eq!(count_matches("....###", &Vec::from([1, 3])), None);
+    assert_eq!(count_matches(".??.###", &Vec::from([1, 3])), Some(2));
+    assert_eq!(count_matches("???.###", &Vec::from([1, 3])), Some(3));
 }
 
 fn is_group_matching(input: &String, grp_size: usize) -> bool {

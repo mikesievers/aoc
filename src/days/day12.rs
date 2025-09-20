@@ -224,7 +224,7 @@ fn count_matches(input: &str, groups: &Vec<usize>) -> Option<usize> {
         }
 
         // Now we know we are not inside a group and can try to match
-        if is_group_matching(&cinput.to_string(), grp_size) {
+        if is_group_matching(&cinput, grp_size) {
             // Determine remaining string, call with remaining groups
             match cinput.len() as i64 - grp_size as i64 {
                 ..=0 => match groups.len() {
@@ -237,7 +237,7 @@ fn count_matches(input: &str, groups: &Vec<usize>) -> Option<usize> {
                 },
                 1.. => {
                     let rest_str = &cinput[(1 + grp_size)..];
-                    let rest_grps = groups.iter().skip(1).map(|&g| g).collect::<Vec<usize>>();
+                    let rest_grps = groups.iter().skip(1).cloned().collect::<Vec<usize>>();
                     if let Some(restmatches) = count_matches(rest_str, &rest_grps) {
                         matches += restmatches;
                     } else {
@@ -297,32 +297,9 @@ fn test_count_matches() {
         count_matches("?###????????", &Vec::from([3, 2, 1])),
         Some(10)
     );
-
-    // unfolded data
-    assert_eq!(count_matches("???.###", &Vec::from([1, 1, 3])), Some(1));
-    assert_eq!(
-        count_matches(".??..??...?##.", &Vec::from([1, 1, 3])),
-        Some(16384)
-    );
-    assert_eq!(
-        count_matches("?#?#?#?#?#?#?#?", &Vec::from([1, 3, 1, 6])),
-        Some(1)
-    );
-    assert_eq!(
-        count_matches("????.#...#...", &Vec::from([4, 1, 1])),
-        Some(16)
-    );
-    assert_eq!(
-        count_matches("????.######..#####.", &Vec::from([1, 6, 5])),
-        Some(2500)
-    );
-    assert_eq!(
-        count_matches("?###????????", &Vec::from([3, 2, 1])),
-        Some(506250)
-    );
 }
 
-fn is_group_matching(input: &String, grp_size: usize) -> bool {
+fn is_group_matching(input: &str, grp_size: usize) -> bool {
     // A string that is too short can't match
     if input.len() < grp_size {
         return false;

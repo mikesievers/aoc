@@ -44,7 +44,7 @@ fn test_atlas() {
 impl Atlas {
     pub fn summarize(&self) -> usize {
         let mut summary = 0;
-        let _:Vec<_> = self
+        let _: Vec<_> = self
             .maps
             .iter()
             .map(|map| {
@@ -63,6 +63,46 @@ impl Atlas {
 
 // Processing
 
+// Part 2
+fn is_symmetric_after_by(line: &Vec<char>, n: usize, distance: usize) -> bool {
+    let delta: usize = line[0..n]
+        .iter()
+        .rev()
+        .zip(&line[n..])
+        .map(|(&a, &b)| match a == b {
+            true => 0,
+            false => 1,
+        })
+        .sum();
+
+    delta == distance
+}
+
+#[test]
+fn test_is_symmetric_after_by() {
+    assert_eq!(
+        is_symmetric_after_by(&"#..##...".chars().collect(), 4, 1),
+        true
+    );
+    assert_eq!(
+        is_symmetric_after_by(&"##..##".chars().collect(), 3, 0),
+        true
+    );
+    assert_eq!(
+        is_symmetric_after_by(&"##..##".chars().collect(), 3, 1),
+        false
+    );
+    assert_eq!(
+        is_symmetric_after_by(&"#.##..##.".chars().collect(), 5, 1),
+        false
+    );
+    assert_eq!(
+        is_symmetric_after_by(&"#.##..#..".chars().collect(), 5, 1),
+        true
+    );
+}
+
+// Part 1
 fn is_symmetric_after(line: &Vec<char>, n: usize) -> bool {
     line[0..n]
         .iter()

@@ -109,4 +109,6 @@ fn main() {
     // Part1: 37718
     let atlas = day13::Atlas::from_file("resources/day13_input.txt");
     println!("Day 13 part 01: {}", atlas.summarize());
+    // Part2:
+    //println!("Day 13 part 02: {}", atlas.summarize(1));
 }

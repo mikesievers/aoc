@@ -104,4 +104,9 @@ fn main() {
     println!("Day 12 part 01: {}", records.sum_match_counts());
     // Part2: 28606137449920
     println!("Day 12 part 02: {}", records.sum_match_counts_unfolded());
+
+    // Day 13
+    // Part1: 37718
+    let atlas = day13::Atlas::from_file("resources/day13_input.txt");
+    println!("Day 13 part 01: {}", atlas.summarize());
 }

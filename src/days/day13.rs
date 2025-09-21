@@ -1,10 +1,10 @@
-use std::fs::read_to_string;
+use std::{collections::HashSet, fs::read_to_string};
 
 use nom::{
     IResult, Parser,
-    character::complete::{line_ending, newline, one_of},
+    character::complete::{line_ending, one_of},
     combinator::{map, opt},
-    multi::{SeparatedList1, many1, separated_list1},
+    multi::{many1, separated_list1},
     sequence::terminated,
 };
 
@@ -16,7 +16,7 @@ struct Map {
 }
 
 #[derive(PartialEq, Debug)]
-struct Atlas {
+pub struct Atlas {
     maps: Vec<Map>,
 }
 
@@ -34,6 +34,31 @@ fn test_atlas() {
     let atlas = Atlas::from_file("resources/day13_sample.txt");
 
     assert_eq!(atlas.maps.len(), 2);
+
+    assert_eq!(find_horizontal_symmetry(&atlas.maps[0]), Some(5));
+    assert_eq!(find_vertical_symmetry(&atlas.maps[1]), Some(4));
+
+    assert_eq!(atlas.summarize(), 405);
+}
+// Main methods
+impl Atlas {
+    pub fn summarize(&self) -> usize {
+        let mut summary = 0;
+        let _:Vec<_> = self
+            .maps
+            .iter()
+            .map(|map| {
+                if let Some(n) = find_horizontal_symmetry(map) {
+                    summary += n;
+                }
+                if let Some(n) = find_vertical_symmetry(map) {
+                    summary += 100 * n;
+                }
+            })
+            .collect();
+
+        summary
+    }
 }
 
 // Processing
@@ -52,6 +77,63 @@ fn test_is_symmetric_after() {
     assert_eq!(is_symmetric_after(&"#.##..##.".chars().collect(), 4), false);
     assert_eq!(is_symmetric_after(&"#.##..##.".chars().collect(), 5), true);
     assert_eq!(is_symmetric_after(&"#.##..##.".chars().collect(), 6), false);
+}
+
+fn find_vertical_symmetry(map: &Map) -> Option<usize> {
+    // Flip the map
+    let rows = map.data.len();
+    let cols = map.data[0].len();
+
+    let mut transposed = vec![vec!['.'; rows]; cols];
+
+    for y in 0..rows {
+        for x in 0..cols {
+            transposed[x][y] = map.data[y][x]
+        }
+    }
+
+    find_horizontal_symmetry(&Map { data: transposed })
+}
+
+fn find_horizontal_symmetry(map: &Map) -> Option<usize> {
+    // Determine all possible axes for each line
+    let axes = map
+        .data
+        .iter()
+        .map(|line| {
+            let mut axis_cand = HashSet::new();
+            for n in 1..(line.len()) {
+                if is_symmetric_after(line, n) {
+                    axis_cand.insert(n);
+                }
+            }
+            axis_cand
+        })
+        .collect::<Vec<HashSet<usize>>>();
+
+    // Find if one axis is common to all lines
+    let common_axis = axes.iter().skip(1).fold(axes[0].clone(), |acc, e| {
+        acc.intersection(e).map(|&x| x).collect()
+    });
+
+    if common_axis.is_empty() {
+        return None;
+    }
+    if common_axis.len() == 1 {
+        return common_axis.iter().next().copied();
+    }
+    panic!("More than one folding axis found.")
+}
+
+#[test]
+fn test_find_horizontal_symmetry() {
+    let map = map_parser("#..\r\n###").unwrap().1;
+    assert_eq!(is_symmetric_after(&map.data[0], 2), true);
+    assert_eq!(is_symmetric_after(&map.data[1], 2), true);
+    assert_eq!(find_horizontal_symmetry(&map), Some(2));
+
+    let map = map_parser("...\r\n..#").unwrap().1;
+    assert_eq!(find_horizontal_symmetry(&map), Some(1));
 }
 
 // Parsing

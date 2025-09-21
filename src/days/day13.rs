@@ -1,6 +1,12 @@
 use std::fs::read_to_string;
 
-use nom::{character::complete::{newline, one_of}, multi::many1, sequence::terminated, IResult, Parser};
+use nom::{
+    IResult, Parser,
+    character::complete::{newline, one_of},
+    combinator::map,
+    multi::{SeparatedList1, many1, separated_list1},
+    sequence::terminated,
+};
 
 struct Map {
     data: Vec<Vec<char>>,
@@ -15,9 +21,7 @@ impl Atlas {
         let input =
             read_to_string(fname).unwrap_or_else(|_| panic!("Could not read input file {fname}"));
 
-        let maps = Vec::new();
-
-        Atlas { maps }
+        atlas_parser.parse(&input).unwrap().1
     }
 }
 
@@ -28,11 +32,23 @@ fn test_atlas() {
     assert_eq!(atlas.maps.len(), 2);
 }
 
-fn map_line(input: &str) -> IResult<&str, Vec<char>> {
+// Parsing
+fn map_line_parser(input: &str) -> IResult<&str, Vec<char>> {
     terminated(many1(one_of(".#")), newline).parse(input)
 }
 
 #[test]
 fn test_map_line() {
-    assert_eq!(map_line.parse(".#.\n").unwrap(), ("", vec!['.', '#', '.']));
+    assert_eq!(
+        map_line_parser.parse(".#.\n").unwrap(),
+        ("", vec!['.', '#', '.'])
+    );
+}
+
+fn map_parser(input: &str) -> IResult<&str, Map> {
+    map(terminated(many1(map_line_parser), newline), |data| Map { data }).parse(input)
+}
+
+fn atlas_parser(input: &str) -> IResult<&str, Atlas> {
+    map(many1(map_parser), |maps| Atlas { maps }).parse(input)
 }

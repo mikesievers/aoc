@@ -8,6 +8,8 @@ use nom::{
     sequence::terminated,
 };
 
+//Main Structures
+
 #[derive(PartialEq, Debug)]
 struct Map {
     data: Vec<Vec<char>>,
@@ -32,6 +34,24 @@ fn test_atlas() {
     let atlas = Atlas::from_file("resources/day13_sample.txt");
 
     assert_eq!(atlas.maps.len(), 2);
+}
+
+// Processing
+
+fn is_symmetric_after(line: &Vec<char>, n: usize) -> bool {
+    line[0..n]
+        .iter()
+        .rev()
+        .zip(&line[n..])
+        .all(|(&a, &b)| a == b)
+}
+
+#[test]
+fn test_is_symmetric_after() {
+    assert_eq!(is_symmetric_after(&"#.##..##.".chars().collect(), 3), false);
+    assert_eq!(is_symmetric_after(&"#.##..##.".chars().collect(), 4), false);
+    assert_eq!(is_symmetric_after(&"#.##..##.".chars().collect(), 5), true);
+    assert_eq!(is_symmetric_after(&"#.##..##.".chars().collect(), 6), false);
 }
 
 // Parsing

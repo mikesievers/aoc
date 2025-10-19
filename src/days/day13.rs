@@ -64,6 +64,98 @@ impl Atlas {
 // Processing
 
 // Part 2
+
+impl Atlas {
+    pub fn summarize_2(&self) -> usize {
+        let mut summary = 0;
+
+        // Markers to track matches axis, init to impossible values
+        let mut horiz_axis = 1000000000;
+        let mut vert_axis = 1000000000;
+
+        let _: Vec<_> = self
+            .maps
+            .iter()
+            .map(|map| {
+                if let Some(n) = find_horizontal_symmetry(map) {
+                    horiz_axis = n;
+                }
+                if let Some(n) = find_vertical_symmetry(map) {
+                    vert_axis = n;
+                }
+                // Find symmetries with distance 1, but not original axis
+                if let Some(n) = find_horizontal_symmetry_2(map, horiz_axis) {
+                    summary += n;
+                }
+                if let Some(n) = find_vertical_symmetry_2(map, vert_axis) {
+                    summary += 100 * n;
+                }
+            })
+            .collect();
+
+        summary
+    }
+}
+
+fn find_vertical_symmetry_2(map: &Map, not_axis: usize) -> Option<usize> {
+    // Flip the map
+    let rows = map.data.len();
+    let cols = map.data[0].len();
+
+    let mut transposed = vec![vec!['.'; rows]; cols];
+
+    for y in 0..rows {
+        for x in 0..cols {
+            transposed[x][y] = map.data[y][x]
+        }
+    }
+
+    find_horizontal_symmetry_2(&Map { data: transposed }, not_axis)
+}
+
+fn find_horizontal_symmetry_2(map: &Map, not_axis: usize) -> Option<usize> {
+    // Determine all possible axes for each line
+    let axes = map
+        .data
+        .iter()
+        .map(|line| {
+            let mut axis_cand = HashSet::new();
+            for n in 1..(line.len()) {
+                if n == not_axis {
+                    continue;
+                } // Can't reuse the old axis
+                if is_symmetric_after_by(line, n, 1) {
+                    axis_cand.insert(n);
+                }
+            }
+            axis_cand
+        })
+        .collect::<Vec<HashSet<usize>>>();
+
+    // Find if one axis is common to all lines
+    let common_axis = axes.iter().skip(1).fold(axes[0].clone(), |acc, e| {
+        acc.intersection(e).map(|&x| x).collect()
+    });
+
+    if common_axis.is_empty() {
+        return None;
+    }
+    if common_axis.len() == 1 {
+        return common_axis.iter().next().copied();
+    }
+    panic!("More than one folding axis found.")
+}
+
+#[test]
+fn test_atlas_2() {
+    let atlas = Atlas::from_file("resources/day13_sample.txt");
+
+    assert_eq!(find_vertical_symmetry_2(&atlas.maps[0], 1000000), Some(3));
+    assert_eq!(find_vertical_symmetry_2(&atlas.maps[1], 3), Some(1));
+
+    assert_eq!(atlas.summarize_2(), 400);
+}
+
 fn is_symmetric_after_by(line: &Vec<char>, n: usize, distance: usize) -> bool {
     let delta: usize = line[0..n]
         .iter()

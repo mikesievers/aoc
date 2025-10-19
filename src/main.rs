@@ -111,4 +111,10 @@ fn main() {
     println!("Day 13 part 01: {}", atlas.summarize());
     // Part2:
     //println!("Day 13 part 02: {}", atlas.summarize(1));
+
+    // Day 14
+    // Part1: 107430
+    let mut platform = day14::Platform::from_file("resources/day14_input.txt");
+    platform.tilt_north();
+    println!("Day 14 part 01: {}", platform.load());
 }

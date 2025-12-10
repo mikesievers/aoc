@@ -46,6 +46,78 @@ impl Platform {
         }
     }
 
+
+    pub fn tilt_west(&mut self) {
+        // for each row, start at the left and walk right
+        // If the field is empty, look east.
+        // If the next non-empty field is an O, swap the two fields.
+        // Continue.
+        let n_rows = self.space.len();
+        let n_columns = self.space[0].len();
+
+        for row in 0..n_rows {
+            // For columns, the last one can be skipped - there is nothing to swap into it
+            for column in 0..n_columns - 1 {
+                match self.space[row][column] {
+                    '.' => {
+                        // field is empty, look east
+                        for right_col in column + 1..n_columns {
+                            match self.space[row][right_col] {
+                                'O' => {
+                                    // It's a rock - swap
+                                    self.space[row][column] = 'O';
+                                    self.space[row][right_column] = '.';
+                                    break;
+                                }
+                                '#' => break, // it's a cube rock, ignore the rest
+                                _ => {}
+                            }
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+    }
+
+
+    pub fn tilt_south(&mut self) {
+        // for each column, start at the bottom and walk up
+        // If the field is empty, look north.
+        // If the next non-empty field is an O, swap the two fields.
+        // Continue.
+        todo!("Only the comment above is changed, the code below needs to be adapted. Reverse the loop, for one.");
+        let n_rows = self.space.len();
+        let n_columns = self.space[0].len();
+
+        for column in 0..n_columns {
+            // For rows, the last one can be skipped - there is nothing to swap into it
+            for row in 0..n_rows - 1 {
+                match self.space[row][column] {
+                    '.' => {
+                        // field is empty, look down
+                        for down_row in row + 1..n_rows {
+                            match self.space[down_row][column] {
+                                'O' => {
+                                    // It's a rock - swap
+                                    self.space[row][column] = 'O';
+                                    self.space[down_row][column] = '.';
+                                    break;
+                                }
+                                '#' => break, // it's a cube rock, ignore the rest
+                                _ => {}
+                            }
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+    }
+
+
+    }
+
     pub fn load(&self) -> i32 {
         let n_rows = self.space.len();
 

@@ -55,6 +55,12 @@ pub struct Dial {
     nr_zero_passes: i32,
 }
 
+impl Default for Dial {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Dial {
     pub fn new() -> Self {
         Dial {

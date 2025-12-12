@@ -16,7 +16,10 @@ use nom::sequence::terminated;
 /// let mut dial = Dial::new();
 /// dial.perform_rotations(&rotations);
 ///
+/// // Part 1
 /// assert_eq!(dial.get_password(), 1078);
+/// // Part 2
+/// assert_eq!(dial.get_password_with_method(), 6412);
 /// ```
 ///
 
@@ -49,7 +52,7 @@ impl Rotations {
 pub struct Dial {
     position: i32,
     nr_zeroes: u32,
-    nr_zero_passes: u32,
+    nr_zero_passes: i32,
 }
 
 impl Dial {
@@ -62,11 +65,36 @@ impl Dial {
     }
 
     pub fn rotate(&mut self, rotation: &Rotation) {
+        // Adjust the position
         match rotation.direction {
-            Direction::Left => self.position = (100 + self.position - rotation.distance) % 100,
-            Direction::Right => self.position = (self.position + rotation.distance) % 100,
+            Direction::Left => {
+                // Make sure starting from 0 is not counted as a double zero
+                if self.position == 0 && rotation.distance != 0 {
+                    self.nr_zero_passes -= 1;
+                }
+                self.position = self.position - rotation.distance
+            }
+            Direction::Right => self.position = self.position + rotation.distance,
         }
 
+        // Count how many times 0 has been passed
+        while self.position > 100 {
+            self.position -= 100;
+            self.nr_zero_passes += 1;
+        }
+        // If it's exactly 100, decrease to 0 but do not count - it will be
+        // counted as zero below
+        if self.position == 100 {
+            self.position = 0;
+        }
+
+        while self.position < 0 {
+            self.position += 100;
+            // Don't count as pass if it stops on negative 0
+            self.nr_zero_passes += 1;
+        }
+
+        // Count as zero if the dial stops exactly on 0
         if self.position == 0 {
             self.nr_zeroes += 1
         }
@@ -75,6 +103,11 @@ impl Dial {
     // Password for part 1
     pub fn get_password(&self) -> u32 {
         self.nr_zeroes
+    }
+
+    // Password for part 2
+    pub fn get_password_with_method(&self) -> u32 {
+        self.nr_zeroes + self.nr_zero_passes as u32
     }
 
     pub fn perform_rotations(&mut self, rotations: &Rotations) {
@@ -142,6 +175,8 @@ mod tests {
         let mut dial = Dial::new();
         dial.perform_rotations(&rotations);
         assert_eq!(dial.get_password(), 3);
+        assert_eq!(dial.nr_zero_passes, 3);
+        assert_eq!(dial.get_password_with_method(), 6);
     }
 
     #[test]

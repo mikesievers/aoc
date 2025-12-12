@@ -72,9 +72,9 @@ impl Dial {
                 if self.position == 0 && rotation.distance != 0 {
                     self.nr_zero_passes -= 1;
                 }
-                self.position = self.position - rotation.distance
+                self.position -= rotation.distance
             }
-            Direction::Right => self.position = self.position + rotation.distance,
+            Direction::Right => self.position += rotation.distance,
         }
 
         // Count how many times 0 has been passed

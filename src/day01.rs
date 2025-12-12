@@ -18,6 +18,7 @@ use nom::sequence::terminated;
 ///
 /// assert_eq!(dial.get_password(), 1078);
 /// ```
+///
 
 #[derive(PartialEq, Debug)]
 pub enum Direction {
@@ -26,7 +27,7 @@ pub enum Direction {
 }
 
 #[derive(PartialEq, Debug)]
-struct Rotation {
+pub struct Rotation {
     direction: Direction,
     distance: i32,
 }
@@ -48,6 +49,7 @@ impl Rotations {
 pub struct Dial {
     position: i32,
     nr_zeroes: u32,
+    nr_zero_passes: u32,
 }
 
 impl Dial {
@@ -55,6 +57,7 @@ impl Dial {
         Dial {
             position: 50,
             nr_zeroes: 0,
+            nr_zero_passes: 0,
         }
     }
 
@@ -69,6 +72,7 @@ impl Dial {
         }
     }
 
+    // Password for part 1
     pub fn get_password(&self) -> u32 {
         self.nr_zeroes
     }

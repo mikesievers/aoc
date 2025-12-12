@@ -1,3 +1,18 @@
+//! Advent of Code day01
+//! ```
+//! //mod day01;
+//! use aoc::day01::{Rotations, Dial};
+//!
+//! let rotations = Rotations::from_file("input/day01_input.txt");
+//! let mut dial = Dial::new();
+//! dial.perform_rotations(&rotations);
+//!
+//! // Part 1
+//! assert_eq!(dial.get_password(), 1078);
+//! // Part 2
+//! assert_eq!(dial.get_password_with_method(), 6412);
+//! ```
+//!
 use std::fs::read_to_string;
 
 use nom::IResult;
@@ -7,21 +22,6 @@ use nom::combinator::opt;
 use nom::multi::many1;
 use nom::sequence::terminated;
 
-/// Advent of Code day01
-/// ```
-/// //mod day01;
-/// use aoc::day01::{Rotations, Dial};
-///
-/// let rotations = Rotations::from_file("input/day01_input.txt");
-/// let mut dial = Dial::new();
-/// dial.perform_rotations(&rotations);
-///
-/// // Part 1
-/// assert_eq!(dial.get_password(), 1078);
-/// // Part 2
-/// assert_eq!(dial.get_password_with_method(), 6412);
-/// ```
-///
 
 #[derive(PartialEq, Debug)]
 pub enum Direction {

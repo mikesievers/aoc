@@ -7,8 +7,20 @@ use nom::combinator::opt;
 use nom::multi::many1;
 use nom::sequence::terminated;
 
+/// Advent of Code day01
+/// ```
+/// //mod day01;
+/// use aoc::day01::{Rotations, Dial};
+///
+/// let rotations = Rotations::from_file("input/day01_input.txt");
+/// let mut dial = Dial::new();
+/// dial.perform_rotations(&rotations);
+///
+/// assert_eq!(dial.get_password(), 1078);
+/// ```
+
 #[derive(PartialEq, Debug)]
-enum Direction {
+pub enum Direction {
     Left,
     Right,
 }
@@ -19,7 +31,7 @@ struct Rotation {
     distance: i32,
 }
 
-struct Rotations {
+pub struct Rotations {
     rotations: Vec<Rotation>,
 }
 
@@ -33,7 +45,7 @@ impl Rotations {
     }
 }
 
-struct Dial {
+pub struct Dial {
     position: i32,
     nr_zeroes: u32,
 }

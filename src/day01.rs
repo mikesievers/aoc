@@ -1,6 +1,5 @@
 //! Advent of Code day01
 //! ```
-//! //mod day01;
 //! use aoc::day01::{Rotations, Dial};
 //!
 //! let rotations = Rotations::from_file("input/day01_input.txt");
@@ -21,7 +20,6 @@ use nom::character::complete::line_ending;
 use nom::combinator::opt;
 use nom::multi::many1;
 use nom::sequence::terminated;
-
 
 #[derive(PartialEq, Debug)]
 pub enum Direction {

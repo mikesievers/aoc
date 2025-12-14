@@ -1,9 +1,10 @@
 //! Advent of Code day02
 //! ```
-//! use  aoc::day02::{IDRanges, sum_invalid_ids};
+//! use  aoc::day02::{IDRanges, sum_invalid_ids, is_invalid_id, is_invalid_id_part2};
 //!
 //! let idranges = IDRanges::from_file("input/day02_input.txt");
-//! assert_eq!(sum_invalid_ids(&idranges), 19605500130);
+//! assert_eq!(sum_invalid_ids(&idranges, is_invalid_id), 19605500130);
+//! assert_eq!(sum_invalid_ids(&idranges, is_invalid_id_part2), 36862281418);
 //! ```
 use std::fs::read_to_string;
 
@@ -55,7 +56,8 @@ fn parse_range_file(input: &str) -> IResult<&str, Vec<IDRange>> {
 }
 
 // id considerations
-fn is_invalid_id(id: u64) -> bool {
+// part 1
+pub fn is_invalid_id(id: u64) -> bool {
     let id_string = id.to_string();
     let id_len = id_string.len();
 
@@ -70,13 +72,33 @@ fn is_invalid_id(id: u64) -> bool {
     }
 }
 
-pub fn sum_invalid_ids(idranges: &IDRanges) -> u64 {
+// part 2
+pub fn is_invalid_id_part2(id: u64) -> bool {
+    let id_string = id.to_string();
+    let id_len = id_string.len();
+
+    // determine divisors
+    // loop over divisors
+    for divisor in 2..=id_len {
+        // return true on first match
+        if id_len % divisor != 0 {
+            continue;
+        }
+
+        if id_string == id_string[0..(id_len / divisor)].repeat(divisor) {
+            return true;
+        };
+    }
+    false
+}
+
+pub fn sum_invalid_ids(idranges: &IDRanges, f_invalid_id: fn(u64) -> bool) -> u64 {
     idranges
         .ranges
         .iter()
         .fold(0, |mut sum_invalid_ids, range| {
             for id in range.start..=range.end {
-                if is_invalid_id(id) {
+                if f_invalid_id(id) {
                     sum_invalid_ids += id
                 }
             }
@@ -87,6 +109,7 @@ pub fn sum_invalid_ids(idranges: &IDRanges) -> u64 {
 #[cfg(test)]
 mod tests {
     use super::is_invalid_id;
+    use super::is_invalid_id_part2;
 
     use super::IDRange;
     use super::IDRanges;
@@ -120,6 +143,22 @@ mod tests {
         assert_eq!(is_invalid_id(input), expected);
     }
 
+    #[rstest]
+    #[case(11, true)]
+    #[case(22, true)]
+    #[case(99, true)]
+    #[case(101, false)]
+    #[case(1188511885, true)]
+    #[case(222222, true)]
+    #[case(1698522, false)]
+    #[case(446446, true)]
+    #[case(38593859, true)]
+    #[case(824824824, true)]
+    #[case(565656, true)]
+    fn test_is_invalid_id_part2(#[case] input: u64, #[case] expected: bool) {
+        assert_eq!(is_invalid_id_part2(input), expected);
+    }
+
     #[test]
     fn test_id_ranges() {
         let idranges = IDRanges::from_file("input/day02_sample.txt");
@@ -138,6 +177,9 @@ mod tests {
             }
         );
 
-        assert_eq!(sum_invalid_ids(&idranges), 1227775554);
+        // part 1
+        assert_eq!(sum_invalid_ids(&idranges, is_invalid_id), 1227775554);
+        // part 2
+        assert_eq!(sum_invalid_ids(&idranges, is_invalid_id_part2), 4174379265);
     }
 }

@@ -9,7 +9,7 @@ use nom::{
     multi::many1,
 };
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Tile {
     Floor,
     Roll,
@@ -42,11 +42,20 @@ fn parse_row(input: &str) -> IResult<&str, Vec<Tile>> {
 }
 
 fn parse_grid(input: &str) -> IResult<&str, Vec<Vec<Tile>>> {
-    let (rest, tiles) = separated_list1(line_ending, parse_row)
-        .parse(input)
-        .unwrap();
+    let (rest, tiles) = separated_list1(line_ending, parse_row).parse(input)?;
 
-    Ok((rest, tiles ))
+    Ok((rest, tiles))
+}
+
+impl Grid {
+    fn tile_at(&self, x: i32, y: i32) -> Option<Tile> {
+        if x < 0 || y < 0 || x > (self.tiles.len() as i32 - 1) || y > (self.tiles.len() as i32 - 1)
+        {
+            return None;
+        }
+
+        Some(self.tiles[x as usize][y as usize].clone())
+    }
 }
 
 #[cfg(test)]
@@ -57,8 +66,9 @@ mod tests {
     fn test_grid() {
         let grid = Grid::from_file("input/day04_sample.txt");
 
-        assert_eq!(grid.tiles[0][0], Tile::Floor);
-        assert_eq!(grid.tiles.last().unwrap()[8], Tile::Roll);
+        assert_eq!(grid.tile_at(-1, 0), None);
+        assert_eq!(grid.tile_at(0, 0), Some(Tile::Floor));
+        assert_eq!(grid.tile_at(9, 8), Some(Tile::Roll));
     }
 
     #[test]

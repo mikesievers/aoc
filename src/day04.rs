@@ -8,13 +8,9 @@
 //! ```
 
 use nom::{Parser, character::complete::line_ending, multi::separated_list1};
-use std::{fs::read_to_string, iter::Product};
+use std::fs::read_to_string;
 
-use nom::{
-    IResult,
-    character::complete::{char, one_of},
-    multi::many1,
-};
+use nom::{IResult, character::complete::one_of, multi::many1};
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Tile {

@@ -4,6 +4,7 @@
 //!
 //! let grid = Grid::from_file("input/day04_input.txt");
 //! assert_eq!(grid.nr_accessible(), 1437);
+//! assert_eq!(grid.nr_removable(), 8765);
 //! ```
 
 use nom::{Parser, character::complete::line_ending, multi::separated_list1};
@@ -32,26 +33,22 @@ impl Grid {
         Grid { tiles }
     }
 
-    fn tile_at(&self, y: i32, x: i32) -> Option<Tile> {
-        if x < 0
-            || y < 0
-            || x > (self.tiles.len() as i32 - 1)
-            || y > (self.tiles[0].len() as i32 - 1)
-        {
+    fn tile_at(tiles: &Vec<Vec<Tile>>, y: i32, x: i32) -> Option<Tile> {
+        if x < 0 || y < 0 || x > (tiles.len() as i32 - 1) || y > (tiles[0].len() as i32 - 1) {
             return None;
         }
 
-        Some(self.tiles[y as usize][x as usize].clone())
+        Some(tiles[y as usize][x as usize].clone())
     }
 
-    fn nr_neighbors_at(&self, y: i32, x: i32) -> usize {
+    fn nr_neighbors_at(tiles: &Vec<Vec<Tile>>, y: i32, x: i32) -> usize {
         let mut cnt = 0;
         for delta_y in [-1, 0, 1] {
             for delta_x in [-1, 0, 1] {
                 if (delta_y == 0) && (delta_x == 0) {
                     continue; // Don't check the tile itself
                 }
-                if self.tile_at(y + delta_y, x + delta_x) == Some(Tile::Roll) {
+                if Grid::tile_at(&tiles, y + delta_y, x + delta_x) == Some(Tile::Roll) {
                     cnt += 1;
                 }
             }
@@ -60,13 +57,14 @@ impl Grid {
         cnt
     }
 
+    // part 1
     pub fn nr_accessible(&self) -> usize {
         let mut cnt_accessible = 0;
 
         for y in 0..self.tiles.len() {
             for x in 0..self.tiles[0].len() {
-                if self.tile_at(y as i32, x as i32) == Some(Tile::Roll)
-                    && self.nr_neighbors_at(y as i32, x as i32) < 4
+                if Grid::tile_at(&self.tiles, y as i32, x as i32) == Some(Tile::Roll)
+                    && Grid::nr_neighbors_at(&self.tiles, y as i32, x as i32) < 4
                 {
                     cnt_accessible += 1;
                 }
@@ -74,6 +72,49 @@ impl Grid {
         }
 
         cnt_accessible
+    }
+
+    // part 2
+    // Count no of removable paper rolls
+    pub fn nr_removable(&self) -> usize {
+        let mut working_tiles = self.tiles.clone();
+
+        let mut total_removed = 0;
+        let mut nr_removed;
+        loop {
+            (nr_removed, working_tiles) = Grid::count_and_remove_accessible_rolls(working_tiles);
+            if nr_removed == 0 {
+                break;
+            }
+            total_removed += nr_removed;
+        }
+
+        total_removed
+    }
+
+    fn count_and_remove_accessible_rolls(mut tiles: Vec<Vec<Tile>>) -> (usize, Vec<Vec<Tile>>) {
+        // Identify removable tiles, count them and remove them
+        // Return the count of removed tiles and the grid minus the removed tiles
+        //
+        let mut removeable_tiles: Vec<(usize, usize)> = Vec::new();
+
+        for y in 0..tiles.len() {
+            for x in 0..tiles[0].len() {
+                if Grid::tile_at(&tiles, y as i32, x as i32) == Some(Tile::Roll)
+                    && Grid::nr_neighbors_at(&tiles, y as i32, x as i32) < 4
+                {
+                    removeable_tiles.push((y, x));
+                }
+            }
+        }
+
+        let nr_removed = removeable_tiles.len();
+
+        for (y, x) in removeable_tiles {
+            tiles[y][x] = Tile::Floor;
+        }
+
+        (nr_removed, tiles)
     }
 }
 
@@ -105,14 +146,18 @@ mod tests {
     fn test_grid() {
         let grid = Grid::from_file("input/day04_sample.txt");
 
-        assert_eq!(grid.tile_at(-1, 0), None);
-        assert_eq!(grid.tile_at(0, 0), Some(Tile::Floor));
-        assert_eq!(grid.tile_at(9, 8), Some(Tile::Roll));
+        assert_eq!(Grid::tile_at(&grid.tiles, -1, 0), None);
+        assert_eq!(Grid::tile_at(&grid.tiles, 0, 0), Some(Tile::Floor));
+        assert_eq!(Grid::tile_at(&grid.tiles, 9, 8), Some(Tile::Roll));
 
-        assert_eq!(grid.nr_neighbors_at(1, 0), 3);
-        assert_eq!(grid.nr_neighbors_at(1, 1), 6);
+        assert_eq!(Grid::nr_neighbors_at(&grid.tiles, 1, 0), 3);
+        assert_eq!(Grid::nr_neighbors_at(&grid.tiles, 1, 1), 6);
 
+        // Part 1
         assert_eq!(grid.nr_accessible(), 13);
+
+        // Part 2
+        assert_eq!(grid.nr_removable(), 43);
     }
 
     #[test]

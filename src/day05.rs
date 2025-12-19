@@ -1,4 +1,9 @@
 //! Advent of Code 2025, Day 05
+//! ```
+//! use aoc::day05::Database;
+//! let database = Database::from_file("input/day05_input.txt");
+//! assert_eq!(database.nr_fresh(), 761);
+//! ```
 
 use nom::{
     IResult, Parser,
@@ -25,6 +30,23 @@ impl Database {
         let (_, database) = parse_database(data.as_str()).unwrap();
 
         database
+    }
+
+    pub fn nr_fresh(&self) -> usize {
+        // Count the items that are fresh, i.e. inventory items contained in the ranges
+        self.inventory
+            .iter()
+            .map(|&x| {
+                let mut is_in_a_range = 0;
+                for range in self.ranges.iter() {
+                    if x >= range.start && x <= range.end {
+                        is_in_a_range = 1;
+                        break;
+                    }
+                }
+                is_in_a_range
+            })
+            .sum()
     }
 }
 
@@ -58,5 +80,7 @@ mod tests {
         assert_eq!(database.ranges[3].end, 18);
         assert_eq!(database.inventory[0], 1);
         assert_eq!(database.inventory[5], 32);
+
+        assert_eq!(database.nr_fresh(), 3);
     }
 }

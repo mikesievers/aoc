@@ -3,15 +3,20 @@
 //! use aoc::day07::Manifold;
 //! let manifold = Manifold::from_file("input/day07_input.txt");
 //! assert_eq!(manifold.n_splits(), 1550);
+//! assert_eq!(manifold.n_timelines(), 9897897326778);
 //! ```
 
 use glam::IVec2;
-use std::{collections::HashSet, fs::read_to_string};
+use std::{
+    collections::{HashMap, HashSet},
+    fs::read_to_string,
+};
 
 pub struct Manifold {
     height: usize,
     beam_pos: IVec2,
     splitters: HashSet<IVec2>,
+    tl_cache: HashMap<IVec2, usize>,
 }
 
 impl Manifold {
@@ -50,10 +55,13 @@ impl Manifold {
             })
             .collect();
 
+        let tl_cache = HashMap::new();
+
         Manifold {
             height,
             beam_pos,
             splitters,
+            tl_cache,
         }
     }
 
@@ -88,6 +96,37 @@ impl Manifold {
 
         n_splits
     }
+
+    fn count_paths(&mut self, beam_pos: &IVec2) -> usize {
+        // Check for cache hit
+        if let Some(&cache_val) = self.tl_cache.get(&beam_pos) {
+            return cache_val;
+        }
+        let x = beam_pos.x;
+        let y = beam_pos.y + 1;
+
+        if y as usize == self.height - 1_usize {
+            return 1;
+        }
+
+        if !self.splitters.contains(&IVec2 { x, y }) {
+            let ret_val = self.count_paths(&IVec2 { x, y });
+            self.tl_cache.insert(beam_pos.clone(), ret_val);
+            return ret_val;
+        }
+
+        let ret_val =
+            self.count_paths(&IVec2 { x: x - 1, y }) + self.count_paths(&IVec2 { x: x + 1, y });
+        self.tl_cache.insert(beam_pos.clone(), ret_val);
+        ret_val
+    }
+
+    pub fn n_timelines(mut self) -> usize {
+        // Count the different possibilities for the beam to split
+        // At each beam splitter, go either left or right
+        // Use recursion: Given a beam in front of a beam splitter, call bothh paths
+        self.count_paths(&self.beam_pos.clone())
+    }
 }
 
 #[cfg(test)]
@@ -108,5 +147,7 @@ mod tests {
         assert!(manifold.splitters.contains(&IVec2 { x: 3, y: 14 }));
 
         assert_eq!(manifold.n_splits(), 21);
+
+        assert_eq!(manifold.n_timelines(), 40);
     }
 }

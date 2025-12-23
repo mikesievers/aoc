@@ -5,6 +5,8 @@ edition = "2024"
 
 [dependencies]
 glam = "0.30.9"
+itertools = "0.14.0"
 memoize = "0.5.1"
 nom = "8.0.0"
 rstest = "0.26.1"
+tracing = "0.1.44"

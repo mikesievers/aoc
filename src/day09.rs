@@ -3,10 +3,18 @@
 //! use aoc::day09::Floor;
 //! let floor = Floor::from_file("input/day09_input.txt");
 //! assert_eq!(floor.largest_rect(), 4777824480);
+//! assert_eq!(floor.largest_rg_rect(), 1542119040); // too low
 //! ```
 
 use std::fs::read_to_string;
 
+use geo::Area;
+use geo::BooleanOps;
+use geo::Intersects;
+use geo::LineString;
+use geo::MultiPolygon;
+use geo::Polygon;
+use geo_booleanop::boolean::BooleanOp;
 use glam::IVec2;
 use itertools::Itertools;
 use nom::IResult;
@@ -38,31 +46,43 @@ impl Floor {
     }
 
     pub fn largest_rg_rect(&self) -> u64 {
-        // It is a LOOP, i.e. no intersections assumed
-        // Given two red tiles
-        // find min, max x and min, max y
-        // Start at top left
-        // If any red tile is between the extrama (not equal to)
-        //  then the square is not a candidate
+        // Use the geo crate to define a polygon for the loop
+        let lstring = self
+            .red_tiles
+            .iter()
+            .map(|p| geo::Coord {
+                x: p.x as f64,
+                y: p.y as f64,
+            })
+            .collect_vec();
+        let rg_area = Polygon::new(LineString::from(lstring), vec![]);
+
+        // For all possible areas, filter those that lie completely inside the loop
+        // Then find the maximum area
         self.red_tiles
             .iter()
             .tuple_combinations()
             .filter(|(p1, p2)| {
-                // ensure that no red tile is in the area between these tiles
+                // determine coordindates of candidate rect
                 let x_min = p1.x.min(p2.x);
                 let x_max = p1.x.max(p2.x);
                 let y_min = p1.y.min(p2.y);
                 let y_max = p1.y.max(p2.y);
-                self.red_tiles.iter().all(|other| {
-                    // Filter all nodes inside the squere
-                    !((other.x > x_min)
-                        && (other.y > y_min)
-                        && (other.x < x_max)
-                        && (other.y < y_max))
-                    // And then filter all nodes that are on
-                    // connecting lines, but on the wrong side
-                    // && (other.x == x_max && other.x>)
-                })
+                let candidate = Polygon::new(
+                    LineString::from(vec![
+                        (x_min as f64, y_min as f64),
+                        (x_min as f64, y_max as f64),
+                        (x_max as f64, y_max as f64),
+                        (x_max as f64, y_min as f64),
+                        // (x_min as f64 + 0.01, y_min as f64 + 0.01),
+                        // (x_min as f64 + 0.01, y_max as f64 - 0.01),
+                        // (x_max as f64 - 0.01, y_max as f64 - 0.01),
+                        // (x_max as f64 - 0.01, y_min as f64 + 0.01),
+                    ]),
+                    vec![],
+                );
+                let intersection: MultiPolygon<f64> = candidate.intersection(&rg_area);
+                (candidate.unsigned_area() - intersection.unsigned_area()).abs() < 0.01
             })
             .inspect(|p| println!("{:?}", p))
             .map(|(p1, p2)| area_plus1(p1, p2))

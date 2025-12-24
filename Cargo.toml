@@ -4,6 +4,8 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+geo = "0.32.0"
+geo-booleanop = "0.3.2"
 glam = "0.30.9"
 itertools = "0.14.0"
 memoize = "0.5.1"

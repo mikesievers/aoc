@@ -10,11 +10,9 @@ use std::fs::read_to_string;
 
 use geo::Area;
 use geo::BooleanOps;
-use geo::Intersects;
 use geo::LineString;
 use geo::MultiPolygon;
 use geo::Polygon;
-use geo_booleanop::boolean::BooleanOp;
 use glam::IVec2;
 use itertools::Itertools;
 use nom::IResult;
@@ -74,10 +72,6 @@ impl Floor {
                         (x_min as f64, y_max as f64),
                         (x_max as f64, y_max as f64),
                         (x_max as f64, y_min as f64),
-                        // (x_min as f64 + 0.01, y_min as f64 + 0.01),
-                        // (x_min as f64 + 0.01, y_max as f64 - 0.01),
-                        // (x_max as f64 - 0.01, y_max as f64 - 0.01),
-                        // (x_max as f64 - 0.01, y_min as f64 + 0.01),
                     ]),
                     vec![],
                 );

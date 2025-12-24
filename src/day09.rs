@@ -5,7 +5,6 @@
 //! assert_eq!(floor.largest_rect(), 4777824480);
 //! ```
 
-use rstest::rstest;
 use std::fs::read_to_string;
 
 use glam::IVec2;
@@ -37,6 +36,40 @@ impl Floor {
             .max()
             .unwrap()
     }
+
+    pub fn largest_rg_rect(&self) -> u64 {
+        // It is a LOOP, i.e. no intersections assumed
+        // Given two red tiles
+        // find min, max x and min, max y
+        // Start at top left
+        // If any red tile is between the extrama (not equal to)
+        //  then the square is not a candidate
+        self.red_tiles
+            .iter()
+            .tuple_combinations()
+            .filter(|(p1, p2)| {
+                // ensure that no red tile is in the area between these tiles
+                let x_min = p1.x.min(p2.x);
+                let x_max = p1.x.max(p2.x);
+                let y_min = p1.y.min(p2.y);
+                let y_max = p1.y.max(p2.y);
+                self.red_tiles.iter().all(|other| {
+                    // Filter all nodes inside the squere
+                    !((other.x > x_min)
+                        && (other.y > y_min)
+                        && (other.x < x_max)
+                        && (other.y < y_max))
+                    // And then filter all nodes that are on
+                    // connecting lines, but on the wrong side
+                    // && (other.x == x_max && other.x>)
+                })
+            })
+            .inspect(|p| println!("{:?}", p))
+            .map(|(p1, p2)| area_plus1(p1, p2))
+            .inspect(|a| println!("  area {:?}", a))
+            .max()
+            .unwrap()
+    }
 }
 
 fn parse_tiles(input: &str) -> IResult<&str, Vec<IVec2>> {
@@ -61,6 +94,7 @@ fn area_plus1(p1: &IVec2, p2: &IVec2) -> u64 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rstest::rstest;
 
     #[test]
     fn test_floor() {
@@ -73,6 +107,7 @@ mod tests {
         );
 
         assert_eq!(floor.largest_rect(), 50);
+        assert_eq!(floor.largest_rg_rect(), 24);
     }
 
     #[rstest]

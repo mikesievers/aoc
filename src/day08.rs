@@ -26,6 +26,7 @@ use nom::{
 pub struct Graph {
     pub nodes: Vec<IVec3>,
     pub circuits: Vec<HashSet<IVec3>>,
+    #[allow(dead_code)]
     max: usize,
 }
 

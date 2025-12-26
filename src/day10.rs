@@ -2,6 +2,10 @@
 
 use std::fs::read_to_string;
 
+use good_lp::{
+    Expression, Solution, SolverModel, coin_cbc, constraint, default_solver, variable, variables,
+};
+
 use itertools::Itertools;
 
 use nom::{
@@ -37,6 +41,68 @@ impl Manual {
             .expect("Could not parse machines");
 
         Manual { machines }
+    }
+
+    fn optimize_machine(machine: &Machine) -> usize {
+        // let mut vars = variables!();
+        let n_switches = machine.diagram.len();
+        let n_buttons = machine.wiring.len();
+
+        // variables! { button_presses: x[n_buttons] (binary) ;}
+        //variables! { button_presses: -0.5<= x[n_buttons] (integer) <= 1.5 ;}
+        variables! { button_presses: -0.5<= x[n_buttons] (binary) <= 1.5 ;}
+
+        let mut objective: Expression = 0.into();
+        for i in 0..n_buttons {
+            objective += x[i];
+        }
+
+        // Add constraints for diagram
+        let mut constraints = vec![];
+        for i_switch in 0..n_switches {
+            let mut wiring_constraint: Expression = 0.into();
+            for button_idx in 0..n_buttons {
+                for &idx in &machine.wiring[button_idx] {
+                    if idx == i_switch {
+                        wiring_constraint += x[button_idx];
+                    }
+                }
+            }
+            match machine.diagram[i_switch] {
+                LightState::On => {
+                    constraints.push(constraint! {  wiring_constraint.clone() >= 0.99 });
+                }
+                LightState::Off => {
+                    constraints.push(constraint! { wiring_constraint.clone() <= 0.001 });
+                }
+            };
+
+            // constraints.push(constraint! { wiring_constraint.clone() == target_value });
+            // constraints.push(constraint! { wiring_constraint.clone() >= target_lower });
+            // constraints.push(constraint! { wiring_constraint.clone() <= target_upper });
+        }
+
+        for c in &constraints {
+            println!("{:?}", c);
+        }
+
+        let solution = button_presses
+            .minimise(objective)
+            //.using(default_solver)
+            .using(coin_cbc)
+            .with_all(constraints)
+            .solve()
+            .expect("Problem could not be solved");
+
+        let sum = x.iter().map(|&x| solution.value(x)).sum::<f64>();
+        sum as usize
+    }
+    pub fn minimal_switch_length(&self) -> usize {
+        // Treat this as an LP problem with booolean decision variables (switch on or off)
+        self.machines
+            .iter()
+            .map(|machine| Self::optimize_machine(machine))
+            .sum()
     }
 }
 
@@ -106,6 +172,6 @@ mod tests {
     #[test]
     fn test_manual() {
         let manual = Manual::from_file("input/day10_sample.txt");
-        assert_eq!(true, false);
+        assert_eq!(manual.minimal_switch_length(), 7);
     }
 }

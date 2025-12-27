@@ -19,7 +19,7 @@
 //! Rather than trying to determine an inverse of the matrix,
 //! guassion eliminationi s performed.
 //!
-use std::ops::{Add, Sub};
+use std::ops::{Add, Div, Sub};
 
 type LightIndex = usize;
 type Button = Vec<LightIndex>;
@@ -51,19 +51,55 @@ impl<const N: i32> Sub for LightState<N> {
         LightState((self.0 - rhs.0).rem_euclid(N))
     }
 }
+// Division is multiplication by multiplicative inverse:
+impl<const N: i32> Div for LightState<N> {
+    type Output = Self;
+
+    fn div(self, rhs: Self) -> Self {
+        // Determine multiplicative inverse
+        let mut mult_inv: i32 = -1;
+        for i in 0..N {
+            if (rhs.0 * i).rem_euclid(N) == 1 {
+                mult_inv = i;
+            }
+        }
+        if mult_inv == -1 {
+            panic!("Multiplicative inverse in base could not be found.");
+        } else {
+            LightState((self.0 * mult_inv).rem_euclid(N))
+        }
+    }
+}
 
 #[cfg(test)]
-mod ls_test {
+mod test_light_state {
     use super::LightState;
 
     #[test]
-    fn test_light_state() {
+    fn test_addition() {
         let ls1: LightState<3> = 1.into();
         let ls2: LightState<3> = 2.into();
         let ls3: LightState<3> = 5.into();
 
         assert_eq!(ls1 + ls1, ls2); // 1+1 == 2
         assert_eq!(ls3 - ls1, ls1); // 2 - 1 == 1
+    }
+
+    #[test]
+    fn test_division() {
+        let ls1: LightState<7> = 6.into();
+        let ls2: LightState<7> = 3.into();
+        assert_eq!(ls1 / ls2, 2.into());
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_division_panic() {
+        // 2 in mod 10 does not have a multiplicative inverse
+        let ls1: LightState<10> = 5.into();
+        let ls2: LightState<10> = 2.into();
+
+        let this_should_panic = ls1 / ls2;
     }
 }
 

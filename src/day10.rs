@@ -2,9 +2,7 @@
 
 use std::fs::read_to_string;
 
-use good_lp::{
-    Expression, Solution, SolverModel, coin_cbc, constraint, default_solver, variable, variables,
-};
+use good_lp::{Expression, Solution, SolverModel, coin_cbc, constraint, variables};
 
 use itertools::Itertools;
 

@@ -33,6 +33,15 @@ pub struct LightState {
     dim: i32,
 }
 
+impl LightState {
+    pub fn new(v: i32, dim: i32) -> Self {
+        LightState {
+            v: v.rem_euclid(dim),
+            dim,
+        }
+    }
+}
+
 // implement modular airithmmetic
 impl Add<LightState> for LightState {
     type Output = Self;
@@ -125,7 +134,7 @@ mod test_light_state {
     }
 }
 
-pub const DIM: i32 = 2;
+// The Lights Out struct
 
 pub struct LightsOut {
     buttons: Vec<Button>,
@@ -146,7 +155,7 @@ impl LightsOut {
         }
     }
 
-    pub fn solution(&self) -> Option<Vec<usize>> {
+    pub fn solution(&self) -> Option<Vec<i32>> {
         //! Determine solution to the lights out problem.
         //! The output is a Vec of button presses.
         //! [1,2] means press button 0 once and button 1 twice.
@@ -154,35 +163,104 @@ impl LightsOut {
 
         // Set up a Matrix to represent the lights out problem
         // A*x = p-b
-        Self::setup_matrix(&self.buttons, &self.initial_state, &self.target_state);
+        let matrix = Self::setup_matrix(&self.buttons, &self.initial_state, &self.target_state);
 
-        // TODO: While the Matrix is not in row echelon form,
-        // perform gaussian elimination
-        Some(vec![0, 1])
+        println!(" pre matrix: {:?}", matrix);
+
+        let re_matrix = Self::to_row_echelon(&matrix);
+        // TODO: nothing is curently testing the matrix to really be in in row exchelon
+        // form, but the following expects it to be in diagonal form
+
+        println!("  re matrix: {:?}", re_matrix);
+
+        // Calculate the solution from the matrix
+        let mut solution = Vec::with_capacity(self.buttons.len());
+        for row_idx in 0..re_matrix.len() {
+            solution.push(re_matrix[row_idx][re_matrix[0].len() - 1].v);
+        }
+
+        Some(solution)
     }
 
     pub fn setup_matrix(
         buttons: &[Button],
         initial_state: &[LightState],
         target_state: &[LightState],
-    ) -> Vec<Vec<LightStateDelta>> {
+    ) -> Vec<Vec<LightState>> {
         // From buttons and number of lights, determine the initial state of the matrix
         // The final column will be the right side of the equation A*x = p-b
         // The COLUMNs of the matrix correspond to the buttons and their wiring (i.e. lights
         // affected)
         // The ROWs correspond to the lights
-        let mut matrix: Vec<Vec<LightStateDelta>> = Vec::with_capacity(target_state.len());
+
+        // All states must have the same dimension, use the first one
+        let dim = target_state[0].dim;
+
+        let mut matrix: Vec<Vec<LightState>> = Vec::with_capacity(target_state.len());
+
         for light_idx in 0..target_state.len() {
             // Create a row by the wirings of the buttons and the expected state minus the initial
             // state
-            let mut row: Vec<LightStateDelta> = Vec::with_capacity(buttons.len() + 1);
+            let mut row: Vec<LightState> = Vec::with_capacity(buttons.len() + 1);
             for button in buttons {
-                row.push(button[light_idx]);
+                row.push(LightState {
+                    v: button[light_idx],
+                    dim,
+                });
             }
             // Add the right side of the equation system as final column
-            row.push(target_state[light_idx] - initial_state[light_idx]);
+            row.push(LightState {
+                v: target_state[light_idx] - initial_state[light_idx],
+                dim,
+            });
 
             matrix.push(row);
+        }
+
+        matrix
+    }
+
+    pub fn to_row_echelon(orig_matrix: &Vec<Vec<LightState>>) -> Vec<Vec<LightState>> {
+        // Change matrix to row echelon form
+        let mut matrix = orig_matrix.clone();
+        let dim = matrix[0][0].dim; // All dims must be equal, use the first
+
+        for row_idx in 0..matrix.len() {
+            // Ensure that the current row has a non-zero entry in the column of the same index
+            if matrix[row_idx][row_idx].v == 0 {
+                // Swap rows if possible
+                for row_cand in row_idx..matrix.len() {
+                    if matrix[row_cand][row_idx].v != 0 {
+                        matrix.swap(row_idx, row_cand);
+                        break; // non-zero entry found, continue
+                    }
+                }
+            }
+            // The matrix row starts with non-zero entry, scale to start with a 1
+            if matrix[row_idx][row_idx].v != 1 {
+                let scale = matrix[row_idx][row_idx].v;
+                // We have to scale
+                if let Some(row) = matrix.get_mut(row_idx) {
+                    for val in row {
+                        *val = *val / scale;
+                    }
+                }
+            }
+            // Now ensure all other rows start with 0
+            let scaled_row = matrix[row_idx].clone(); // need for subtraction below
+            for other_row_idx in 0..matrix.len() {
+                if other_row_idx == row_idx {
+                    continue;
+                }
+                let other_row_factor = matrix[other_row_idx][row_idx].v;
+                if other_row_factor != 0
+                    && let Some(other_row) = matrix.get_mut(other_row_idx)
+                {
+                    for (col, val) in other_row.iter_mut().enumerate() {
+                        *val = LightState::new(val.v - scaled_row[col].v * other_row_factor, dim)
+                    }
+                }
+            }
         }
 
         matrix
@@ -204,9 +282,23 @@ mod tests {
         let buttons: Vec<Button> = vec![vec![1, 0], vec![1, 1]];
         let matrix = LightsOut::setup_matrix(&buttons, &initial_state, &target_state);
 
-        println!("Matrix: {:?}", matrix);
+        let ls0 = LightState { v: 0, dim: 2 };
+        let ls1 = LightState { v: 1, dim: 2 };
 
-        assert_eq!(matrix, vec![vec![1, 1, 0], vec![0, 1, 1]]);
+        assert_eq!(matrix, vec![vec![ls1, ls1, ls0], vec![ls0, ls1, ls1]]);
+    }
+
+    #[test]
+    fn test_row_echelon() {
+        let ls0 = LightState { v: 0, dim: 3 };
+        let ls1 = LightState { v: 1, dim: 3 };
+        let ls2 = LightState { v: 2, dim: 3 };
+
+        let matrix: Vec<Vec<LightState>> = vec![vec![ls2, ls0, ls2], vec![ls1, ls1, ls1]];
+        let re_matrix_expected = vec![vec![ls1, ls0, ls1], vec![ls0, ls1, ls0]];
+        let re_matrix = LightsOut::to_row_echelon(&matrix);
+
+        assert_eq!(re_matrix, re_matrix_expected);
     }
 
     #[test]

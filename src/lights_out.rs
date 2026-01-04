@@ -19,18 +19,32 @@
 //! Rather than trying to determine an inverse of the matrix,
 //! guassion elimination is performed.
 //!
+//! ```
+//! use aoc::lights_out::{Button, LightState, LightsOut};
+//!
+//! let initial_state = vec![LightState { v: 0, dim: 2 }, LightState { v: 1, dim: 2 }]; // Light 0 is off, 1 is on
+//! let target_state = vec![LightState { v: 0, dim: 2 }, LightState { v: 0, dim: 2 }]; // All lights should be out
+//! // Button 0 switches light 0,
+//! // button 1 switches lights 0 and 1
+//! let buttons: Vec<Button> = vec![vec![1, 0], vec![1, 1]];
+//! let lo = LightsOut::new(buttons, initial_state, target_state);
+//!
+//! // Both buttons have to be pressed once:
+//! assert_eq!(lo.solution(), Some(vec![1, 1]));
+//! ```
+
 use std::ops::{Add, Div, Sub};
 
 // Light cycle delta
 type LightStateDelta = i32;
 // Which cycle changes does a button press cause
-type Button = Vec<LightStateDelta>;
+pub type Button = Vec<LightStateDelta>;
 
 // Define a LightState that supports modular arithmetic
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct LightState {
-    v: i32,
-    dim: i32,
+    pub v: i32,
+    pub dim: i32,
 }
 
 impl LightState {
@@ -299,18 +313,5 @@ mod tests {
         let re_matrix = LightsOut::to_row_echelon(&matrix);
 
         assert_eq!(re_matrix, re_matrix_expected);
-    }
-
-    #[test]
-    fn test_lo() {
-        let initial_state = vec![LightState { v: 0, dim: 2 }, LightState { v: 1, dim: 2 }]; // Light 0 is off, 1 is on
-        let target_state = vec![LightState { v: 0, dim: 2 }, LightState { v: 0, dim: 2 }]; // All lights should be out
-        // Button 0 switches light 0,
-        // button 1 switches lights 0 and 1
-        let buttons: Vec<Button> = vec![vec![1, 0], vec![1, 1]];
-        let lo = LightsOut::new(buttons, initial_state, target_state);
-
-        // Both buttons have to be pressed once:
-        assert_eq!(lo.solution(), Some(vec![1, 1]));
     }
 }

@@ -244,6 +244,8 @@ impl LightsOut {
 
         // TODO: the min of matrix len and width does not really work and is an artifact of the
         // problem not really being solved
+        // See https://raw.org/research/solving-lightsout-using-linear-algebra/
+        // for a possible approach to the solution
         for row_idx in 0..matrix.len().min(matrix[0].len()) {
             // Ensure that the current row has a non-zero entry in the column of the same index
             // TODO: This assumes that the matrix has same number of rows and columns, that Can

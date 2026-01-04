@@ -1,8 +1,7 @@
 //! Advent of Code 2025 day 10
 
+use crate::lights_out::{Button, LightState as LightStateOL, LightsOut};
 use std::fs::read_to_string;
-
-use good_lp::{Expression, Solution, SolverModel, coin_cbc, constraint, variables};
 
 use itertools::Itertools;
 
@@ -42,59 +41,58 @@ impl Manual {
     }
 
     fn optimize_machine(machine: &Machine) -> usize {
-        // let mut vars = variables!();
-        let n_switches = machine.diagram.len();
-        let n_buttons = machine.wiring.len();
+        // Use lights out module to find solution
+        //
+        // let initial_state = vec![LightState { v: 0, dim: 2 }, LightState { v: 1, dim: 2 }]; // Light 0 is off, 1 is on
+        // let target_state = vec![LightState { v: 0, dim: 2 }, LightState { v: 0, dim: 2 }]; // All lights should be out
+        // // Button 0 switches light 0,
+        // // button 1 switches lights 0 and 1
+        // let buttons: Vec<Button> = vec![vec![1, 0], vec![1, 1]];
+        // let lo = LightsOut::new(buttons, initial_state, target_state);
+        //
+        // // Both buttons have to be pressed once:
+        // assert_eq!(lo.solution(), Some(vec![1, 1]));
+        let initial_state = machine
+            .diagram
+            .iter()
+            .map(|light| match light {
+                LightState::On => LightStateOL { v: 1, dim: 2 },
+                LightState::Off => LightStateOL { v: 0, dim: 2 },
+            })
+            .collect_vec();
+        println!("Initial state: {:?}", &initial_state);
 
-        // variables! { button_presses: x[n_buttons] (binary) ;}
-        //variables! { button_presses: -0.5<= x[n_buttons] (integer) <= 1.5 ;}
-        variables! { button_presses: -0.5<= x[n_buttons] (binary) <= 1.5 ;}
+        let target_state = initial_state
+            .iter()
+            .map(|_x| LightStateOL { v: 0, dim: 2 })
+            .collect_vec();
+        println!("Target state: {:?}", &target_state);
 
-        let mut objective: Expression = 0.into();
-        for i in 0..n_buttons {
-            objective += x[i];
+        // Configure which lights are switched by which button
+        let mut buttons = Vec::with_capacity(machine.wiring.len());
+
+        for wiring in &machine.wiring {
+            let button = (0..target_state.len())
+                .map(|light_idx| match wiring.contains(&light_idx) {
+                    true => 1,
+                    false => 0,
+                })
+                .collect_vec();
+            buttons.push(button);
         }
 
-        // Add constraints for diagram
-        let mut constraints = vec![];
-        for i_switch in 0..n_switches {
-            let mut wiring_constraint: Expression = 0.into();
-            for button_idx in 0..n_buttons {
-                for &idx in &machine.wiring[button_idx] {
-                    if idx == i_switch {
-                        wiring_constraint += x[button_idx];
-                    }
-                }
-            }
-            match machine.diagram[i_switch] {
-                LightState::On => {
-                    constraints.push(constraint! {  wiring_constraint.clone() >= 0.99 });
-                }
-                LightState::Off => {
-                    constraints.push(constraint! { wiring_constraint.clone() <= 0.001 });
-                }
-            };
+        println!("Buttons: {:?}", buttons);
 
-            // constraints.push(constraint! { wiring_constraint.clone() == target_value });
-            // constraints.push(constraint! { wiring_constraint.clone() >= target_lower });
-            // constraints.push(constraint! { wiring_constraint.clone() <= target_upper });
-        }
+        // Create the problem and get the solution
+        let lights_out = LightsOut::new(buttons, initial_state, target_state);
 
-        for c in &constraints {
-            println!("{:?}", c);
-        }
+        let solution = lights_out
+            .solution()
+            .expect("LightsOut could not be solved!");
 
-        let solution = button_presses
-            .minimise(objective)
-            //.using(default_solver)
-            .using(coin_cbc)
-            .with_all(constraints)
-            .solve()
-            .expect("Problem could not be solved");
-
-        let sum = x.iter().map(|&x| solution.value(x)).sum::<f64>();
-        sum as usize
+        solution.iter().map(|&x| x as usize).sum()
     }
+
     pub fn minimal_switch_length(&self) -> usize {
         // Treat this as an LP problem with booolean decision variables (switch on or off)
         self.machines

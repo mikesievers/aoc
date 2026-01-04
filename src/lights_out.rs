@@ -98,6 +98,9 @@ impl Div<LightStateDelta> for LightState {
 
     fn div(self, rhs: LightStateDelta) -> Self {
         // Determine multiplicative inverse
+        if rhs == 0 {
+            panic!("Division by zero attempted");
+        }
         let mut mult_inv: i32 = -1;
         for i in 0..self.dim {
             if (rhs * i).rem_euclid(self.dim) == 1 {
@@ -239,8 +242,14 @@ impl LightsOut {
         let mut matrix = orig_matrix.clone();
         let dim = matrix[0][0].dim; // All dims must be equal, use the first
 
-        for row_idx in 0..matrix.len() {
+        // TODO: the min of matrix len and width does not really work and is an artifact of the
+        // problem not really being solved
+        for row_idx in 0..matrix.len().min(matrix[0].len()) {
             // Ensure that the current row has a non-zero entry in the column of the same index
+            // TODO: This assumes that the matrix has same number of rows and columns, that Can
+            // also not be the case (i.e. more lights than switches) NEXT: Write a really general
+            // solution for the lights out problem, handling non-square matrices and ideally also
+            // cases where multiple solutins exist
             if matrix[row_idx][row_idx].v == 0 {
                 // Swap rows if possible
                 for row_cand in row_idx..matrix.len() {
@@ -251,7 +260,7 @@ impl LightsOut {
                 }
             }
             // The matrix row starts with non-zero entry, scale to start with a 1
-            if matrix[row_idx][row_idx].v != 1 {
+            if ![0, 1].contains(&matrix[row_idx][row_idx].v) {
                 let scale = matrix[row_idx][row_idx].v;
                 // We have to scale
                 if let Some(row) = matrix.get_mut(row_idx) {

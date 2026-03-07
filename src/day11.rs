@@ -57,11 +57,16 @@ fn parse_rack(input: &str) -> IResult<&str, Vec<Device>> {
 impl Rack {
     pub fn nr_paths_to_out(&self, node: &str) -> u64 {
         // Count the number of different paths from given string to "out"
+        // If the exit node is found, count as 1
         if node == "out" {
             return 1;
         }
-        // self.devices.get(id)
-        42
+        // recursively find the paths from the nodes connected to the current one
+        self.devices[node]
+            .conns
+            .iter()
+            .map(|node| self.nr_paths_to_out(&node))
+            .sum()
     }
 }
 

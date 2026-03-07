@@ -14,3 +14,4 @@ pub mod day08;
 pub mod day09;
 pub mod day10;
 pub mod lights_out;
+pub mod day11;

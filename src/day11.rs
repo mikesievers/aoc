@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::fs::read_to_string;
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 
 use nom::Parser;
 use nom::bytes::complete::tag;
@@ -85,6 +85,15 @@ mod tests {
 
         assert_eq!(rack.nr_paths_to_out("out"), 1);
         assert_eq!(rack.nr_paths_to_out("you"), 5);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_day11_1() -> Result<()> {
+        let rack = Rack::from_file("input/day11_input.txt")?;
+
+        assert_eq!(rack.nr_paths_to_out("you"), 670);
 
         Ok(())
     }
